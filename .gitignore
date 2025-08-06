@@ -1,0 +1,29 @@
+# Laravel & Node
+/aranto_infomed/node_modules/
+/aranto_infomed/public/build/
+/aranto_infomed/public/hot/
+/aranto_infomed/public/storage/
+/aranto_infomed/storage/*.key
+/aranto_infomed/storage/pail/
+/aranto_infomed/vendor/
+/aranto_infomed/.env
+/aranto_infomed/.env.backup
+/aranto_infomed/.phpunit.cache
+/aranto_infomed/.phpunit.result.cache
+/aranto_infomed/phpunit.xml
+/aranto_infomed/npm-debug.log
+/aranto_infomed/yarn-error.log
+
+# IDEs & tools
+**/.idea/
+**/.vscode/
+**/.fleet/
+**/.zed/
+
+# Docker
+.env.docker
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
