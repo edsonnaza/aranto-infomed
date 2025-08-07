@@ -13,6 +13,11 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
+      {
+        title: 'Especialidades',
+        href: '/especialidades',
+        icon: BookOpen,
+    },
 ];
 
 const footerNavItems: NavItem[] = [

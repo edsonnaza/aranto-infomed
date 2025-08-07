@@ -3,14 +3,31 @@
 namespace App\Http\Controllers;
 use App\Models\Especialidad;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class EspecialidadController extends Controller
 {
-     public function index()
-    {
-        $especialidades = Especialidad::all();
-        return view('especialidades.index', compact('especialidades'));
-    }
+   public function index()
+{
+    $especialidades = Especialidad::all();
+    $columns = [
+        ['label' => 'ID', 'field' => 'id'],
+        ['label' => 'Nombre', 'field' => 'nombre'],
+        // agregar más columnas según sea necesario
+    ];
+    $data = $especialidades->map(function ($especialidad) {
+        return [
+            'id' => $especialidad->id,
+            'nombre' => $especialidad->nombre,
+            // agregar más campos según sea necesario
+        ];
+    })->toArray();
+    return Inertia::render('especialidad/Especialidad', [
+        'columns' => $columns,
+        'data' => $data,
+        'especialidades' => $especialidades,
+    ]);
+}
 
     public function create()
     {

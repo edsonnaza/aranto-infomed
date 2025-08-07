@@ -42,3 +42,17 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface EspecialidadProps {
+  columns: {
+    label: string;
+    field: string;
+  }[];
+  data: {
+    id: number;
+    nombre: string;
+    active: boolean;
+    // agregar más campos según sea necesario
+  }[];
+  especialidades: unknown; // tipo desconocido, usar 'unknown' en vez de 'any'
+}
