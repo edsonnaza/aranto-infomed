@@ -13,19 +13,15 @@ import {
   useReactTable,
   flexRender,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -38,22 +34,37 @@ import {
 interface GenericDataTableProps<TData> {
   columns: ColumnDef<TData>[]
   data: TData[]
-  filterColumn?: string // Key for filtering
+  filterColumn?: string
+  renderActions?: (row: TData) => React.ReactNode
 }
 
 export function GenericDataTable<TData>({
   columns,
   data,
   filterColumn,
+  renderActions,
 }: GenericDataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
+  // 🔹 Combinar columnas + columna de acciones si se pasó renderActions
+  const enhancedColumns = React.useMemo<ColumnDef<TData>[]>(() => {
+    if (!renderActions) return columns
+    return [
+      ...columns,
+      {
+        id: "actions",
+        header: "Acciones",
+        cell: ({ row }) => renderActions(row.original),
+      },
+    ]
+  }, [columns, renderActions])
+
   const table = useReactTable({
     data,
-    columns,
+    columns: enhancedColumns, // ✅ ahora usamos enhancedColumns
     state: {
       sorting,
       columnFilters,
@@ -72,10 +83,11 @@ export function GenericDataTable<TData>({
 
   return (
     <div className="w-full">
+      {/* 🔹 Filtro por columna */}
       <div className="flex items-center py-4">
         {filterColumn && (
           <Input
-            placeholder={`Filter ${filterColumn}...`}
+            placeholder={`Filtrar ${filterColumn}...`}
             value={(table.getColumn(filterColumn)?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn(filterColumn)?.setFilterValue(event.target.value)
@@ -83,10 +95,11 @@ export function GenericDataTable<TData>({
             className="max-w-sm"
           />
         )}
+        {/* 🔹 Selector de columnas */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
+              Columnas <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -109,6 +122,7 @@ export function GenericDataTable<TData>({
         </DropdownMenu>
       </div>
 
+      {/* 🔹 Tabla */}
       <div className="overflow-hidden rounded-md border">
         <Table>
           <TableHeader>
@@ -140,8 +154,8 @@ export function GenericDataTable<TData>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                <TableCell colSpan={enhancedColumns.length} className="h-24 text-center">
+                  No hay resultados.
                 </TableCell>
               </TableRow>
             )}
@@ -149,10 +163,11 @@ export function GenericDataTable<TData>({
         </Table>
       </div>
 
+      {/* 🔹 Paginación */}
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+          {table.getFilteredSelectedRowModel().rows.length} de{" "}
+          {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
         </div>
         <div className="space-x-2">
           <Button
@@ -161,7 +176,7 @@ export function GenericDataTable<TData>({
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            Anterior
           </Button>
           <Button
             variant="outline"
@@ -169,7 +184,7 @@ export function GenericDataTable<TData>({
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
-            Next
+            Siguiente
           </Button>
         </div>
       </div>
