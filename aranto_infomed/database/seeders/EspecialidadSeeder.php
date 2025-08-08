@@ -21,11 +21,7 @@ class EspecialidadSeeder extends Seeder
         $sql = str_replace(array("\n", "\r"), '', $sql);
         $sql = str_replace(array('`', '\\'), '', $sql);
         $sql = "INSERT INTO especialidades (id, nombre) VALUES " . $sql;
-        $sql = str_replace(array(
-            '/\*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT \*/;',
-            '/\*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS \*/;',
-            '/\*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION \*/;',
-        ), '', $sql);
+        $sql = preg_replace('/\/\*![0-9]+.*?\*\//', '', $sql);
         DB::unprepared($sql);
     }
 }
