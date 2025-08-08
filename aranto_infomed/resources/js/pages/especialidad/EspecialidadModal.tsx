@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { toast } from "sonner" // ✅ usar sonner
+import { toast } from "sonner"
+import { router } from "@inertiajs/react"
 
 interface Props {
   open: boolean
@@ -19,23 +20,40 @@ export function EspecialidadModal({ open, onClose, especialidad }: Props) {
     setNombre(especialidad?.nombre ?? "")
   }, [especialidad])
 
-  const handleSave = () => {
-    if (!nombre.trim()) {
-      toast.error("El nombre es obligatorio.")
-      return
-    }
-
-    if (especialidad) {
-      // actualizar
-      toast.success(`Especialidad "${nombre}" actualizada correctamente.`)
-    } else {
-      // crear nueva
-      toast.success(`Especialidad "${nombre}" creada correctamente.`)
-    }
-
-    onClose()
+const handleSave = () => {
+  if (!nombre.trim()) {
+    toast.error("El nombre es obligatorio.")
+    return
   }
 
+  if (especialidad) {
+    router.put(
+      route("especialidades.update", especialidad.id),
+      { nombre, active: especialidad.active, sede_id: 1 },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          toast.success(`Especialidad "${nombre}" actualizada correctamente.`)
+          onClose()
+        },
+        onError: () => toast.error("Error al actualizar"),
+      }
+    )
+  } else {
+    router.post(
+      route("especialidades.store"),
+      { nombre, active: true, sede_id: 1 },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          toast.success(`Especialidad "${nombre}" creada correctamente.`)
+          onClose()
+        },
+        onError: () => toast.error("Error al crear"),
+      }
+    )
+  }
+}
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>

@@ -10,6 +10,8 @@ import { EspecialidadModal } from "./EspecialidadModal"
 import AppLayout from "@/layouts/app-layout"
 import { Head } from "@inertiajs/react"
 import { BreadcrumbItem } from "@/types"  
+import { router } from "@inertiajs/react"
+import TooltipComponent  from "@/components/common/TooltipComponent"
 
 
 export interface Especialidad {
@@ -29,14 +31,23 @@ export default function Especialidad({ data }: { data: Especialidad[] }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [selected, setSelected] = useState<Especialidad | null>(null)
 
-  const handleToggleActive = (esp: Especialidad) => {
-    // Aquí iría tu petición API real con Inertia o fetch
-    toast.success(
-      esp.active
-        ? "Especialidad desactivada correctamente."
-        : "Especialidad activada correctamente."
-    )
-  }
+const handleToggleActive = (esp: Especialidad) => {
+router.post(
+    route("especialidades.toggleActive", esp.id),
+    {},
+    {
+    preserveScroll: true,
+    onSuccess: () => {
+        toast.success(
+        esp.active
+            ? "Especialidad desactivada correctamente."
+            : "Especialidad activada correctamente."
+        )
+    },
+    onError: () => toast.error("Error al cambiar el estado"),
+    }
+)
+}
 
   const handleEdit = (esp: Especialidad) => {
     setSelected(esp)
@@ -48,30 +59,32 @@ export default function Especialidad({ data }: { data: Especialidad[] }) {
     setModalOpen(true)
   }
 
-  const columns: ColumnDef<Especialidad>[] = [
-    { accessorKey: "id", header: "ID" },
-    { accessorKey: "nombre", header: "Nombre" },
-    {
-      accessorKey: "active",
-      header: "Activo",
-      cell: ({ row }) => {
-        const esp = row.original
-        return (
+ const columns: ColumnDef<Especialidad>[] = [
+  { accessorKey: "id", header: "ID" },
+  { accessorKey: "nombre", header: "Nombre" },
+  {
+    accessorKey: "active",
+    header: "Activo",
+    cell: ({ row }) => {
+      const esp = row.original
+      return (
+        <TooltipComponent message={esp.active ? `Desactivar ${esp.nombre} ?` : `Activar ${esp.nombre} ?`}>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => handleToggleActive(esp)}
           >
-            {!esp.active ? (
+            {esp.active ? (
               <Check className="w-5 h-5 text-green-500" />
             ) : (
               <X className="w-5 h-5 text-red-500" />
             )}
           </Button>
-        )
-      },
+        </TooltipComponent>
+      )
     },
-  ]
+  },
+]
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -88,16 +101,21 @@ export default function Especialidad({ data }: { data: Especialidad[] }) {
         filterColumn="nombre"
         renderActions={(row) => (
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" onClick={() => handleEdit(row)}>
-              <Pencil className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleToggleActive(row)}
-            >
-              <Trash2 className="w-4 h-4 text-red-500" />
-            </Button>
+             <TooltipComponent message={`Editar ${row.nombre} ?`}> 
+                <Button variant="ghost" size="icon" onClick={() => handleEdit(row)}>
+                <Pencil className="w-4 h-4" />
+                </Button>
+            </TooltipComponent>
+            
+            <TooltipComponent message={row.active ? `Desactivar ${row.nombre} ?` : `Activar ${row.nombre} ?`}>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleToggleActive(row)}
+                >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+            </TooltipComponent>
           </div>
         )}
       />

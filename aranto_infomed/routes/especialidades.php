@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\EspecialidadController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware('auth')->group(function () {
     Route::get('especialidades', [EspecialidadController::class, 'index'])->name('especialidades.index');
@@ -12,4 +11,5 @@ Route::middleware('auth')->group(function () {
     Route::get('especialidades/{especialidad}/edit', [EspecialidadController::class, 'edit'])->name('especialidades.edit');
     Route::put('especialidades/{especialidad}', [EspecialidadController::class, 'update'])->name('especialidades.update');
     Route::delete('especialidades/{especialidad}', [EspecialidadController::class, 'destroy'])->name('especialidades.destroy');
+    Route::post('especialidades/{especialidad}/toggle-active', [EspecialidadController::class, 'toggleActive'])->name('especialidades.toggleActive');
 });
