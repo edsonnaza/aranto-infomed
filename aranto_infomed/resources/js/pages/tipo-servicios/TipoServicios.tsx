@@ -96,7 +96,7 @@ export default function TipoServicios({ data }: { data: TipoServicio[] }) {
         <GenericDataTable
           columns={columns}
           data={data}
-          filterColumn="name"
+          //filterColumn="name"
           renderActions={(row) => (
             <div className="flex gap-2">
               <TooltipComponent message={`Editar ${row.name} ?`}> 
