@@ -17,3 +17,4 @@ require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/especialidades.php';
 require __DIR__.'/profesionales.php';
+require __DIR__.'/tipo_servicios.php';
