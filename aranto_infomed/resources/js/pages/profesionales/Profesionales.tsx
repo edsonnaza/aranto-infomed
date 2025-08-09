@@ -129,7 +129,6 @@ export default function Profesionales({ data, especialidades }: Props) {
         <GenericDataTable
           columns={columns}
           data={data}
-          filterColumn="name"
           renderActions={(row) => (
             <div className="flex gap-2">
               <TooltipComponent
