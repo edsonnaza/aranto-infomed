@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TipoServicio;
+use App\Models\ServiceCategories;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -10,7 +10,7 @@ class TipoServiciosController extends Controller
 {
     public function index()
     {
-        $tipoServicios = TipoServicio::all();
+        $tipoServicios = ServiceCategories::all();
 
         $columns = [
             ['label' => 'ID', 'field' => 'id'],
@@ -39,13 +39,13 @@ class TipoServiciosController extends Controller
             'active' => 'required|boolean',
         ]);
 
-        TipoServicio::create($validated);
+        ServiceCategories::create($validated);
 
         return redirect()->route('tipo-servicios.index')
             ->with('success', 'Tipo de servicio creado correctamente.');
     }
 
-    public function update(Request $request, TipoServicio $tipoServicio)
+    public function update(Request $request, ServiceCategories $tipoServicio)
     {
         $validated = $request->validate([
             'name'   => 'required|string|max:255',
@@ -58,7 +58,7 @@ class TipoServiciosController extends Controller
             ->with('success', 'Tipo de servicio actualizado correctamente.');
     }
 
-    public function destroy(TipoServicio $tipoServicio)
+    public function destroy(ServiceCategories $tipoServicio)
     {
         $tipoServicio->delete();
 
@@ -66,7 +66,7 @@ class TipoServiciosController extends Controller
             ->with('success', 'Tipo de servicio eliminado correctamente.');
     }
 
-    public function toggleActive(TipoServicio $tipoServicio)
+    public function toggleActive(ServiceCategories $tipoServicio)
     {
         $tipoServicio->update([
             'active' => !$tipoServicio->active
