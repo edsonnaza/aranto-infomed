@@ -17,7 +17,11 @@ return new class extends Migration
             $table->foreignId('seguro_id')->nullable()->constrained('seguros');
             $table->decimal('price_sale', 12, 2)->default(0);
             $table->decimal('price_cost', 12, 2)->default(0);
-            $table->decimal('iva', 5, 2)->default(0);
+            $table->decimal('iva_id', 5,0)->nullable();
+            $table->foreignId('iva_type_id')->constrained('iva_types');
+           
+            $table->foreignId('sede_id')->constrained('sedes');  
+
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->timestamps();

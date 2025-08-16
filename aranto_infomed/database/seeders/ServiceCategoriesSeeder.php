@@ -12,7 +12,9 @@ class ServiceCategoriesSeeder extends Seeder
      * Run the database seeds.
      */
     public function run(): void
-    {   DB::table('service_categories')->truncate();
+    {   
+         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+         DB::table('service_categories')->truncate();
          DB::table('service_categories')->insert([
             ['id' => 22, 'name' => 'Servicios Sanatoriales', 'sede_id' =>  1],
             ['id' => 23, 'name' => 'Consultas Consultorios', 'sede_id' =>  1],
@@ -43,5 +45,7 @@ class ServiceCategoriesSeeder extends Seeder
             ['id' => 48, 'name' => 'Test de Marcha',
                 'sede_id' =>  1],
         ]);
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        $this->command->info('🎉 Migración completada: Service Categories insertados');
     }
 }

@@ -37,6 +37,7 @@ class LegacyProductsAndServicesSeeder extends Seeder
                     'category_id' => $legacy->IdCategoria,
                     'sede_id'     => $legacy->sedeid ?: 1,
                     'active'      => strtoupper($legacy->Estado) === 'ACTIVO',
+            
                     'origen'      => $legacy->origen,
                     'created_at'  => $createdAt,
                     'updated_at'  => now(),
@@ -82,7 +83,7 @@ class LegacyProductsAndServicesSeeder extends Seeder
                     'seguro_id'   => $price->idseguro ?: null,
                     'price_sale'  => $price->PrecioVenta ?: 0,
                     'price_cost'  => $producto->PrecioCosto ?: 0, // opcional
-                    'iva'         => $producto->ivaid ,
+                    'iva_type_id' => $producto->ivaid ,
                     'start_date'  => $startDate,
                     'end_date'    => null,
                     'created_at'  => now(),
@@ -94,7 +95,8 @@ class LegacyProductsAndServicesSeeder extends Seeder
                     'seguro_id'   => $price->idseguro ?: null,
                     'price_sale'  => $price->PrecioVenta ?: 0,
                     'price_cost'  => $producto->PrecioCosto ?: 0, // opcional
-                    'iva'         => $producto->ivaid ,
+                    'iva_type_id'=> $producto->ivaid ,
+                    'sede_id'     => $producto->sedeid ?: 1,
                     'start_date'  => $startDate,
                     'end_date'    => null,
                     'created_at'  => now(),
