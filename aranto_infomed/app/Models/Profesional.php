@@ -8,7 +8,7 @@ class Profesional extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'profesionales';
+    protected $table = 'professionals';
 
     protected $fillable = [
         'name',
@@ -17,9 +17,9 @@ class Profesional extends Model
         'gender',
         'especialidad_id',
         'active',
-        'comision_percentage',
-        'comision_interno',
-        'comision_externo', 
+        'comission_percentage',
+        'comission_interno',
+        'comission_externo', 
         'sede_id',
         'fecha_alta',
         'email',

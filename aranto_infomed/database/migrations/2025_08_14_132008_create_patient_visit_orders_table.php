@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('patient_visit_id')->constrained('patient_visits')->onDelete('cascade');
             $table->decimal('total_amount', 12, 2)->default(0); // total bruto sin descuento
+            $table->decimal('commission_percentage', 5, 2)->nullable(); // porcentaje de comisión
+            $table->decimal('commission_amount', 12, 2)->nullable(); // monto de comisión
             $table->decimal('discount_amount', 12, 2)->default(0);
             $table->decimal('discount_percent', 5, 2)->default(0);
             $table->decimal('final_amount', 12, 2)->default(0); // total - descuentos

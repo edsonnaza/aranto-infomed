@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('profesionales', function (Blueprint $table) {
+        Schema::create('professionals', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('last_name')->nullable();
@@ -19,9 +19,9 @@ return new class extends Migration
             $table->enum('gender', ['H', 'M', 'O'])->nullable(); // O = Otro / No definido
             $table->unsignedBigInteger('especialidad_id')->nullable();
             $table->boolean('active')->default(true);
-            $table->decimal('comision_percentage', 5, 2)->nullable(); // e.g. 25.50%
-            $table->string('comision_interno')->nullable(); 
-            $table->string('comision_externo')->nullable();
+            $table->decimal('commission_percentage', 5, 2)->nullable(); // e.g. 25.50%
+            $table->string('commission_interno')->nullable(); 
+            $table->string('commission_externo')->nullable();
             $table->unsignedBigInteger('sede_id')->nullable();
             $table->date('fecha_alta')->nullable();
             $table->string('email')->nullable()->unique();
@@ -44,7 +44,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('profesionales');
+        Schema::dropIfExists('professionals');
     }
 };
 
