@@ -14,13 +14,13 @@ return new class extends Migration
       Schema::create('patient_visit_payments', function (Blueprint $table) {
         $table->id();
         $table->foreignId('patient_visit_id')->constrained('patient_visits')->onDelete('cascade');
-        $table->foreignId('profesional_id')->nullable()->constrained('profesionales')->nullOnDelete();
+        $table->foreignId('professional_id')->nullable()->constrained('professionals')->nullOnDelete();
         $table->foreignId('cash_register_openings_id')->nullable()->constrained('cash_register_openings')->nullOnDelete();
         $table->enum('payment_status', ['paid', 'pending', 'cancelled'])->default('pending');
         $table->decimal('amount', 12, 2)->default(0);
         $table->boolean('commission_paid')->default(false);
         $table->decimal('commission_percentage', 12, 2)->default(0);
-        $table->decimal('comission_number', 12, 2)->nullable()->default(0); // Método de pago (efectivo, tarjeta, etc.)
+        $table->decimal('commission_number', 12, 2)->nullable()->default(0); // Método de pago (efectivo, tarjeta, etc.)
         $table->timestamp('payment_date')->nullable();
 
         $table->timestamps();
