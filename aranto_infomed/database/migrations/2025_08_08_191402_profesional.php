@@ -19,6 +19,9 @@ return new class extends Migration
             $table->enum('gender', ['H', 'M', 'O'])->nullable(); // O = Otro / No definido
             $table->unsignedBigInteger('especialidad_id')->nullable();
             $table->boolean('active')->default(true);
+             $table->foreignId('professional_id')
+                  ->constrained('professionals')
+                  ->cascadeOnDelete();
             $table->decimal('commission_percentage', 5, 2)->nullable(); // e.g. 25.50%
             $table->string('commission_interno')->nullable(); 
             $table->string('commission_externo')->nullable();
