@@ -10,6 +10,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/confirm', [ReceptionController::class, 'confirmVisit'])->name('reception.confirmVisit');
     Route::get('/reception/patients/search', [ReceptionController::class, 'searchPatient'])
         ->name('reception.patients.search');
-    Route::get('/reception/services/search', [ReceptionController::class, 'searchServices'])
-        ->name('reception.services.search');
+    Route::get('/reception/services/search', [ReceptionController::class, 'searchService'])->name('reception.service.search');
+    Route::get('/reception/services/price', [ReceptionController::class, 'getServicePrice'])
+        ->name('reception.services.price');
 });

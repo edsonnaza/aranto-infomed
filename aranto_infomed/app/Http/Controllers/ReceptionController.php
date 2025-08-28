@@ -7,25 +7,29 @@ use App\Models\PatientVisit;
 use App\Models\PatientVisitOrder;
 use Inertia\Inertia;
 use App\Models\Services;
+use App\Models\ServicePrices;
 use App\Models\Profesional;
 use App\Models\Seguro;
+use Log;
+
+
 
 class ReceptionController extends Controller
 {
     public function index()
     {  
-        $services = Services::with('serviceprices')->get()->map(function ($s) {
-            return [
-                'id' => $s->id,
-                'name' => $s->name,
-                'price_sale' => $s->serviceprices->first()->price_sale ?? 0,
-            ];
-        });
+         $seguros = Seguro::where('active', true)->get()->map(function ($s) {
+        return [
+            'id' => $s->id,
+            'name' => $s->name,
+        ];
+    });
 
-        return Inertia::render('reception/Index', [
-            'services' => $services,
-            'professionals' => Profesional::all(),
-        ]);
+    return Inertia::render('reception/Index', [
+        'professionals' => Profesional::all(),
+        'seguros' => $seguros
+        // los servicios se buscan dinámicamente vía searchService
+    ]);
     }
 
     public function storePatient(Request $request)
@@ -92,25 +96,47 @@ class ReceptionController extends Controller
             return response()->json($patients);
     }
 
-      public function searchServices(Request $request)
+    public function searchService(Request $request)
     {
         $query = $request->input('q', '');
+        $seguroId = $request->input('seguro_id');
 
-        $services = Services::query()
-            ->where('name', 'LIKE', "%{$query}%")
-            ->with('serviceprices')
-            ->limit(10)
-            ->get()
-            ->map(function ($s) {
-                return [
-                    'id' => $s->id,
-                    'name' => $s->name,
-                    'price_sale' => $s->serviceprices->first()->price_sale ?? 0,
-                ];
-            });
+        $services = Services::with(['serviceprices' => function ($q) use ($seguroId) {
+        if ($seguroId) {
+            $q->where('seguro_id', $seguroId);
+        }
+        $q->with('seguro'); // 👈 ahora sí funciona
+        }])
+        ->where('name', 'LIKE', "%{$query}%")
+        ->limit(10)
+        ->get()
+        ->map(function ($s) use ($seguroId) {
+         $price = $s->serviceprices->first();
 
+            return [
+                'id' => $s->id,
+                'name' => $s->name,
+                'price_sale' => $price ? $price->price_sale : 0,
+                'seguro_id' => $seguroId,
+                'seguro_name' => $price && $price->seguro ? $price->seguro->name : 'Particular',
+            ];
+        });
+        
+        Log::info("Seguro Id: " . $seguroId);
+        Log::info("Services: " . json_encode($services));
         return response()->json($services);
     }
 
+    public function getServicePrice(Request $request, $serviceId)
+    {
+        $seguroId = $request->input('seguro_id');
+        
+        $price = ServicePrices::where('service_id', $serviceId)
+                ->where('seguro_id', $seguroId)
+                ->first()
+                ->price_sale ?? 0;
+
+        return response()->json(['price_sale' => $price]);
+    }
 }
 
