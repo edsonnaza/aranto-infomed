@@ -8,4 +8,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/visits', [ReceptionController::class, 'storeVisit'])->name('reception.storeVisit');
     Route::post('/orders', [ReceptionController::class, 'storeOrder'])->name('reception.storeOrder');
     Route::post('/confirm', [ReceptionController::class, 'confirmVisit'])->name('reception.confirmVisit');
+    Route::get('/reception/patients/search', [ReceptionController::class, 'searchPatient'])
+        ->name('reception.patients.search');
+    Route::get('/reception/services/search', [ReceptionController::class, 'searchServices'])
+        ->name('reception.services.search');
 });

@@ -2,9 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Country;
+use App\Models\Ocupation;
+use App\Models\Company;
+ 
+
 use Illuminate\Database\Eloquent\Model;
 
-class patient extends Model
+class Patient extends Model
 {
     protected $table = 'patients';
 
@@ -35,6 +40,11 @@ class patient extends Model
     public function country()
     {
         return $this->belongsTo(Country::class);
+    }
+
+    public function seguro()
+    {
+      return $this->belongsTo(Seguro::class);
     }
     
 }

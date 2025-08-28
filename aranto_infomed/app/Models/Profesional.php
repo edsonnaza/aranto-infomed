@@ -37,4 +37,11 @@ class Profesional extends Model
     {
         return $this->belongsTo(Especialidad::class);
     }
+
+    public function getFullNameAttribute()
+    {
+        return "{$this->name} {$this->last_name}";
+    }
+
+  
 }

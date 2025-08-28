@@ -8,13 +8,22 @@ use App\Models\PatientVisitOrder;
 use Inertia\Inertia;
 use App\Models\Services;
 use App\Models\Profesional;
+use App\Models\Seguro;
 
 class ReceptionController extends Controller
 {
     public function index()
-    {
+    {  
+        $services = Services::with('serviceprices')->get()->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'name' => $s->name,
+                'price_sale' => $s->serviceprices->first()->price_sale ?? 0,
+            ];
+        });
+
         return Inertia::render('reception/Index', [
-            'services' => Services::all(),
+            'services' => $services,
             'professionals' => Profesional::all(),
         ]);
     }
@@ -63,5 +72,45 @@ class ReceptionController extends Controller
 
         return redirect()->route('cashier.index')->with('visit_id', $visit->id);
     }
+
+    public function searchPatient(Request $request)
+    {
+            $query = $request->input('q', '');
+
+            $patients = Patient::with('seguro') // eager load para evitar N+1
+                ->where('full_name', 'LIKE', "%{$query}%")
+                ->limit(10)
+                ->get()
+                ->map(function ($s) {
+                    return [
+                        'id' => $s->id,
+                        'full_name' => $s->full_name,
+                        'seguro_name' => $s->seguro ? $s->seguro->name : null,
+                    ];
+                });
+
+            return response()->json($patients);
+    }
+
+      public function searchServices(Request $request)
+    {
+        $query = $request->input('q', '');
+
+        $services = Services::query()
+            ->where('name', 'LIKE', "%{$query}%")
+            ->with('serviceprices')
+            ->limit(10)
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'price_sale' => $s->serviceprices->first()->price_sale ?? 0,
+                ];
+            });
+
+        return response()->json($services);
+    }
+
 }
 

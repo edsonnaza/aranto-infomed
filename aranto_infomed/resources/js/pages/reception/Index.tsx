@@ -6,14 +6,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import AppLayout from "@/layouts/app-layout"
 import { BreadcrumbItem } from "@/types"
 import { useReceptionStore } from "@/stores/useReceptionStore"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
-type Service = { id: number; name: string; price: number }
-type Professional = { id: number; name: string }
+type Service = { id: number; name: string; price_sale: number }
+type Professional = { id: number; name: string; last_name: string; full_name: string ; lastname:string }
+type Patient = { id: number; full_name: string; seguro_id: number; seguro_name: string }
 
 interface ReceptionProps {
   services: Service[]
   professionals: Professional[]
+  patients: Patient[]
 }
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: "Recepción", href: "/reception" }]
@@ -23,11 +25,81 @@ export default function Index({ services, professionals }: ReceptionProps) {
   const [searchPatient, setSearchPatient] = useState("")
   const [searchProfessional, setSearchProfessional] = useState("")
   const [searchService, setSearchService] = useState("")
+  const [resultsPatients, setResultsPatients] = useState<Patient[]>([])
+  const [resultsProfessionals, setResultsProfessionals] = useState<Professional[]>([])
+  const [resultsServices, setResultsServices] = useState<Service[]>([]) 
 
-  const visitForm = useForm({ patient_id: "", professional_id: "", cart: [] })
+useEffect(() => {
+  if (searchPatient.length > 2) {
+    fetch(`/reception/patients/search?q=${searchPatient}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Error en la búsqueda de pacientes");
+        return res.json();
+      })
+      .then(data => setResultsPatients(data))
+      .catch(err => {
+        console.error(err);
+        setResultsPatients([]);
+      });
+  } else {
+    setResultsPatients([]);
+  }
+}, [searchPatient]);
+
+useEffect(() => {
+  if (searchProfessional.length > 2) {
+    fetch(`/reception/professionals/search?q=${searchProfessional}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Error en la búsqueda de profesionales");
+        return res.json();
+      })
+      .then(data => setResultsProfessionals(data))
+      .catch(err => {
+        console.error(err);
+        setResultsProfessionals([]);
+      });
+  } else {
+    setResultsProfessionals([]);
+  }
+}, [searchProfessional]);
+
+useEffect(() => {
+  if (searchService.length > 2) {
+    fetch(`/reception/services/search?q=${searchService}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Error en la búsqueda de servicios");
+        return res.json();
+      })
+      .then(data => setResultsServices(data))
+      .catch(err => {
+        console.error(err);
+        setResultsServices([]);
+      });
+  } else {
+    setResultsServices([]);
+  }
+}, [searchService]);
+
+
+
+const visitForm = useForm<{
+  patient_id: string
+  professional_id: string
+  cart: ServiceItem[]
+}>({
+  patient_id: "",
+  professional_id: "",
+  cart: [],
+})
+
+type ServiceItem = Service & {
+  qty: number
+  discount: number
+  price_sale: number
+}
 
   const total = cart.reduce((sum, item) => {
-    const subtotal = item.qty * item.price
+    const subtotal = item.qty * item.price_sale
     return sum + (subtotal - (subtotal * item.discount) / 100)
   }, 0)
 
@@ -36,40 +108,52 @@ export default function Index({ services, professionals }: ReceptionProps) {
       <Head title="Recepción" />
       <div className="grid gap-6 p-6 grid-cols-2">
         {/* Paciente */}
+       {/* Paciente */}
         <Card>
-          <CardContent className="space-y-3">
+        <CardContent className="space-y-3">
             <h2 className="text-xl font-bold">Paciente</h2>
-            <Input
-              placeholder="Buscar paciente..."
-              value={searchPatient}
-              onChange={(e) => setSearchPatient(e.target.value)}
-            />
-            {/* Simula búsqueda en tiempo real */}
-            {searchPatient.length > 2 && (
-              <div className="border rounded p-2 max-h-40 overflow-y-auto">
-                {["Juan Pérez", "Pedro Gómez", "María López"]
-                  .filter((n) => n.toLowerCase().includes(searchPatient.toLowerCase()))
-                  .map((n, i) => (
-                    <div
-                      key={i}
-                      className="cursor-pointer hover:bg-gray-100 p-1"
-                      onClick={() => {
-                        setPatient({ id: i + 1, name: n })
-                        setSearchPatient(n)
-                      }}
-                    >
-                      {n}
-                    </div>
-                  ))}
-                <Button variant="outline" size="sm" className="mt-2 w-full">
-                  + Registrar nuevo paciente
-                </Button>
-              </div>
-            )}
-            {patient && <p className="text-sm text-green-600">✔ {patient.name} seleccionado</p>}
-          </CardContent>
-        </Card>
 
+            {/* Input de búsqueda */}
+            <Input
+            placeholder="Buscar paciente..."
+            value={searchPatient}
+            onChange={(e) => setSearchPatient(e.target.value)}
+            />
+
+            {/* Resultados de búsqueda */}
+            {searchPatient.length > 2 && (
+            <div className="border rounded p-2 max-h-40 overflow-y-auto">
+               {resultsPatients.map((p) => (
+                <div
+                    key={p.id}
+                    className="cursor-pointer hover:bg-gray-100 p-1"
+                    onClick={() => {
+                    setPatient(p)
+                    setSearchPatient(p.full_name)
+                    setResultsPatients([])
+                    setSearchPatient("")
+                    }}
+                >
+                    {p.full_name}{"-"}{p.seguro_name}
+                </div>
+                ))}
+
+
+                {/* Botón para registrar un nuevo paciente */}
+                <Button variant="outline" size="sm" className="mt-2 w-full">
+                + Registrar nuevo paciente
+                </Button>
+            </div>
+            )}
+
+            {/* Paciente seleccionado */}
+            {patient && (
+            <p className="text-sm text-green-600">
+                ✔ {patient.full_name}{"-"}{patient.seguro_name} seleccionado
+            </p>
+            )}
+        </CardContent>
+        </Card>
         {/* Profesional */}
         <Card>
           <CardContent className="space-y-3">
@@ -89,15 +173,16 @@ export default function Index({ services, professionals }: ReceptionProps) {
                       className="cursor-pointer hover:bg-gray-100 p-1"
                       onClick={() => {
                         setProfessional(p)
-                        setSearchProfessional(p.name)
+                        setSearchProfessional(p.name +' ' + p.last_name )
+                        setSearchProfessional("")
                       }}
                     >
-                      {p.name}
+                      {p.full_name}
                     </div>
                   ))}
               </div>
             )}
-            {professional && <p className="text-sm text-green-600">✔ {professional.name} seleccionado</p>}
+            {professional && <p className="text-sm text-green-600">✔ {professional.full_name } seleccionado</p>}
           </CardContent>
         </Card>
 
@@ -119,11 +204,17 @@ export default function Index({ services, professionals }: ReceptionProps) {
                       key={s.id}
                       className="cursor-pointer hover:bg-gray-100 p-1"
                       onClick={() => {
-                        addService(s)
+                        addService({
+                          id: s.id,
+                          name: s.name,
+                          price_sale: s.price_sale,
+                          qty: 1,
+                          discount: 0,
+                        })
                         setSearchService("")
                       }}
                     >
-                      {s.name} - ${s.price}
+                      {s.name} - ${s.price_sale}
                     </div>
                   ))}
               </div>
@@ -143,7 +234,8 @@ export default function Index({ services, professionals }: ReceptionProps) {
               </TableHeader>
               <TableBody>
                 {cart.map((item) => {
-                  const subtotal = item.qty * item.price
+                      console.log(item)
+                  const subtotal = item.qty * item.price_sale
                   const final = subtotal - (subtotal * item.discount) / 100
                   return (
                     <TableRow key={item.id}>
@@ -157,7 +249,7 @@ export default function Index({ services, professionals }: ReceptionProps) {
                           className="w-16"
                         />
                       </TableCell>
-                      <TableCell>${item.price}</TableCell>
+                      <TableCell>${item.price_sale}</TableCell>
                       <TableCell>
                         <Input
                           type="number"
@@ -185,18 +277,17 @@ export default function Index({ services, professionals }: ReceptionProps) {
 
         {/* Confirmar */}
         <div className="col-span-2 flex justify-end">
-          <Button
+         <Button
             onClick={() => {
-              visitForm.setData({
-                patient_id: patient?.id || "",
-                professional_id: professional?.id || "",
-                cart,
-              })
-              visitForm.post(route("reception.confirmVisit"))
+                visitForm.setData({
+                ...visitForm.data,
+                })
+
+                visitForm.post(route("reception.confirmVisit"))
             }}
-          >
+            >
             Confirmar y Enviar a Caja
-          </Button>
+            </Button>
         </div>
       </div>
     </AppLayout>

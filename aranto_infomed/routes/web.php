@@ -19,3 +19,4 @@ require __DIR__.'/especialidades.php';
 require __DIR__.'/profesionales.php';
 require __DIR__.'/tipo_servicios.php';
 require __DIR__.'/reception.php';
+require __DIR__.'/patients.php';

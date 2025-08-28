@@ -2,21 +2,25 @@ import { create } from "zustand"
 
 type Patient = {
   id?: number
-  name: string
+  full_name: string
   document?: string
   dob?: string
   phone?: string
+  seguro_id?: number 
+  seguro_name: string
 }
 
 type Professional = {
   id: number
   name: string
+  last_name: string
+  full_name: string
 }
 
 type ServiceItem = {
   id: number
   name: string
-  price: number
+  price_sale: number
   qty: number
   discount: number
 }
