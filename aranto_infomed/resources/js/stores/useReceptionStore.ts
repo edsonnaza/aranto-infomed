@@ -1,37 +1,8 @@
 import { create } from "zustand"
-
-type Patient = {
-  id?: number
-  full_name: string
-  document?: string
-  dob?: string
-  phone?: string
-  seguro_id?: number
-  seguro_name?: string
-}
-
-type Professional = {
-  id: number
-  name: string
-  last_name: string
-  full_name: string
-}
-
-type Seguro = {
-  id: number
-  name: string
-}
-
-type ServiceItem = {
-  id: number
-  name: string
-  price_sale: number
-  qty: number
-  discount: number
-  seguro_id: number
-  seguro_name: string
-}
-
+import { Patient } from "@/types/patient"
+import { Professional } from "@/types/professional"
+import { Seguro } from "@/types/seguro"
+import { ServiceItem } from "@/types/services"
 
 interface ReceptionState {
   patient: Patient | null

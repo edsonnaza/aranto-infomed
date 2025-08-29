@@ -25,7 +25,7 @@ class ReceptionController extends Controller
         ];
     });
 
-    return Inertia::render('reception/Index', [
+    return Inertia::render('reception/ReceptionPage', [
         'professionals' => Profesional::all(),
         'seguros' => $seguros
         // los servicios se buscan dinámicamente vía searchService
@@ -89,6 +89,7 @@ class ReceptionController extends Controller
                     return [
                         'id' => $s->id,
                         'full_name' => $s->full_name,
+                        'seguro_id' => $s->seguro ? $s->seguro->id : null,
                         'seguro_name' => $s->seguro ? $s->seguro->name : null,
                     ];
                 });
