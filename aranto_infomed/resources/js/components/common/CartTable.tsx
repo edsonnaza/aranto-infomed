@@ -71,7 +71,7 @@ const resultsServices = useSearchServices(
                   setSearchService("")
                 }}
               >
-                {s.name} - Gs {formatPrice(s.price_sale)} ({s.seguro_name})
+                {s.name} - Gs {formatPrice(Number(s.price_sale))} ({s.seguro_name})
               </div>
             ))}
           </div>

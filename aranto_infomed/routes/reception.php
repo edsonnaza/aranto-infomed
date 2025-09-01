@@ -13,4 +13,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/reception/services/search', [ReceptionController::class, 'searchService'])->name('reception.service.search');
     Route::get('/reception/services/price', [ReceptionController::class, 'getServicePrice'])
         ->name('reception.services.price');
+    Route::post('/reception/visits', [ReceptionController::class, 'storePatientVisit'])->name('reception.storePatientVisit');
 });

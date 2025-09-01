@@ -26,7 +26,7 @@ return new class extends Migration
 
             // Estado de la visita
             $table->enum('visit_status', ['scheduled', 'waiting', 'in_progress', 'completed', 'cancelled'])
-                ->default('scheduled');
+                ->default('waiting');
 
             // Fechas importantes
             $table->timestamp('scheduled_for')->nullable();

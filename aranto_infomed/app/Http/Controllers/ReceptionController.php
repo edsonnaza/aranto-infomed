@@ -10,12 +10,18 @@ use App\Models\Services;
 use App\Models\ServicePrices;
 use App\Models\Profesional;
 use App\Models\Seguro;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validate;
+use App\Services\PatientVisitService;
 use Log;
+use App\Traits\LoggerTrait;
 
 
 
 class ReceptionController extends Controller
 {
+    use LoggerTrait;
     public function index()
     {  
          $seguros = Seguro::where('active', true)->get()->map(function ($s) {
@@ -28,7 +34,6 @@ class ReceptionController extends Controller
     return Inertia::render('reception/ReceptionPage', [
         'professionals' => Profesional::all(),
         'seguros' => $seguros
-        // los servicios se buscan dinámicamente vía searchService
     ]);
     }
 
@@ -44,6 +49,54 @@ class ReceptionController extends Controller
 
         return back()->with('patient_id', $patient->id);
     }
+
+   public function storePatientVisit(Request $request, PatientVisitService $service)
+    {
+        // 🔹 Log inicial
+        Log::info('[CONTROLLER][ReceptionController] Storing patient visit', $request->all());
+
+        // 🔹 Validaciones
+        $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'professional_id' => 'required|exists:professionals,id',
+            'seguro_id' => 'nullable|exists:seguros,id',
+            'visit_status' => 'required|string',
+            'sede_id' => 'required|exists:sedes,id',
+            'order.items' => 'required|array|min:1',
+            'order.items.*.service_id' => 'required|exists:services,id',
+            'order.items.*.quantity' => 'required|integer|min:1',
+            'order.items.*.professional_id' => 'required|exists:professionals,id', // obligatorio
+        ]);
+
+        try {
+            // 🔹 Intentamos crear visita + orden + items
+            $visit = $service->createVisitWithOrder($request->all());
+
+            Log::info('[CONTROLLER][ReceptionController] Visit stored successfully', [
+                'visit_id' => $visit->id
+            ]);
+
+            // 🔹 Respuesta exitosa a Inertia
+            return redirect()
+                ->route('reception.index')
+                ->with('success', "✅ Visita #{$visit->id} registrada correctamente");
+
+        } catch (\Throwable $e) {
+            // 🔥 Log completo del error
+            Log::error('[CONTROLLER][ReceptionController] Failed to store visit', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
+
+            // ❌ Retorno realista al frontend (manteniendo los datos del formulario)
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', "❌ Error al guardar la visita. Intente de nuevo o contacte soporte. Detalle: {$e->getMessage()}");
+        }
+    }
+
 
     public function storeVisit(Request $request)
     {
@@ -123,8 +176,6 @@ class ReceptionController extends Controller
             ];
         });
         
-        Log::info("Seguro Id: " . $seguroId);
-        Log::info("Services: " . json_encode($services));
         return response()->json($services);
     }
 
