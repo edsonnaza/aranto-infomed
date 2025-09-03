@@ -46,5 +46,10 @@ class Patient extends Model
     {
       return $this->belongsTo(Seguro::class);
     }
+
+    public function visits()
+    {
+        return $this->hasMany(PatientVisit::class);
+    }
     
 }

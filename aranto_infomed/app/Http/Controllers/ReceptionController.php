@@ -16,12 +16,21 @@ use Illuminate\Support\Facades\Validate;
 use App\Services\PatientVisitService;
 use Log;
 use App\Traits\LoggerTrait;
+use Illuminate\Support\Carbon;
+use App\Services\UpdateStatus;
 
 
 
 class ReceptionController extends Controller
 {
     use LoggerTrait;
+   protected UpdateStatus $updateStatus;
+
+    public function __construct(UpdateStatus $updateStatus)
+    {
+        $this->updateStatus = $updateStatus;
+    }
+
     public function index()
     {  
          $seguros = Seguro::where('active', true)->get()->map(function ($s) {
@@ -30,6 +39,7 @@ class ReceptionController extends Controller
             'name' => $s->name,
         ];
     });
+
 
     return Inertia::render('reception/ReceptionPage', [
         'professionals' => Profesional::all(),
@@ -190,5 +200,44 @@ class ReceptionController extends Controller
 
         return response()->json(['price_sale' => $price]);
     }
+
+    public function visitsRegistered()
+    {
+        $today = Carbon::today();
+
+        $visitsRegistered = PatientVisit::with(['patient', 'professional', 'seguro','orders.items'])
+            ->whereDate('created_at', $today) // 🔥 solo registros de hoy
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return Inertia::render('reception/VisitsRegistered', [
+            'professionals' => Profesional::all(),
+            'seguros' => Seguro::where('active', true)->get(),
+            'data' => $visitsRegistered,
+        ]);
+    }
+
+    public function showVisits(Request $request)
+    {
+        $today = Carbon::today();
+
+        $visitsRegistered = PatientVisit::with(['patient', 'professional', 'seguro', 'orders.items'])
+            ->whereDate('created_at', $today) // 🔥 solo registros de hoy
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return response()->json($visitsRegistered);
+    }
+
+    public function cancelVisit($visitId, UpdateStatus $updateStatus)
+    {
+         $visit = PatientVisit::findOrFail($visitId);
+
+    $result = $updateStatus->handle($visit, 'cancelled', "Visita #{$visit->id} anulada correctamente.");
+
+    // Inertia flash
+    return back()->with($result['status'], $result['message']);
+    }
+
 }
 

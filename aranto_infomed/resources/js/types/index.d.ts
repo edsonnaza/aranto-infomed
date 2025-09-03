@@ -17,9 +17,10 @@ export interface NavGroup {
 
 export interface NavItem {
     title: string;
-    href: string;
+    href?: string | null;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    children?: NavItem[]  | null;
 }
 
 export interface SharedData {
@@ -55,4 +56,25 @@ export interface EspecialidadProps {
     // agregar más campos según sea necesario
   }[];
   especialidades: unknown; // tipo desconocido, usar 'unknown' en vez de 'any'
+}
+
+export interface Items {
+    id: number;
+    service_name: string;
+    status: string;
+    quantity: number;
+    unit_price: string;
+    total_price: string;
+}
+
+
+export interface GenericDataTable {
+  data: {
+    data: Profesional[]
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+    links: { url: string | null; label: string; active: boolean }[]
+  }
 }

@@ -10,12 +10,13 @@ import AppLayout from "@/layouts/app-layout"
 import { Head, router } from "@inertiajs/react"
 import TooltipComponent from "@/components/common/TooltipComponent"
 import { ProfesionalModal } from "./ProfesionalModal"
-import { BreadcrumbItem } from "@/types"
+import { BreadcrumbItem, GenericDataTable as GenericDataTableType } from "@/types/index.d"
 
 export interface Especialidad {
   id: number
   nombre: string
 }
+
 
 export interface Profesional {
   id: number
@@ -37,6 +38,7 @@ interface Props {
   especialidades: Especialidad[]
 }
 
+
 const breadcrumbs: BreadcrumbItem[] = [
   {
     title: "Profesionales",
@@ -44,7 +46,7 @@ const breadcrumbs: BreadcrumbItem[] = [
   },
 ]
 
-export default function Profesionales({ data, especialidades }: Props) {
+export default function Profesionales({ data: paginatedData, especialidades }: GenericDataTableType & Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const [selected, setSelected] = useState<Profesional | null>(null)
 
@@ -117,7 +119,6 @@ export default function Profesionales({ data, especialidades }: Props) {
       },
     },
   ]
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Profesionales" />
@@ -126,51 +127,36 @@ export default function Profesionales({ data, especialidades }: Props) {
           <Button onClick={handleNew}>Nuevo Profesional</Button>
         </div>
 
-        <GenericDataTable
-          columns={columns}
-          data={data}
-          renderActions={(row) => (
-            <div className="flex gap-2">
-              <TooltipComponent
-                message={`Editar ${row.name} ${row.last_name}?`}
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEdit(row)}
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-              </TooltipComponent>
+      <GenericDataTable
+        columns={columns}
+        data={paginatedData.data}
+        links={paginatedData.links}  
+        serverSidePagination
+        renderActions={(row) => (
+          <div className="flex gap-2">
+            <TooltipComponent message={`Editar ${row.name} ${row.last_name}?`}>
+              <Button variant="ghost" size="icon" onClick={() => handleEdit(row)}>
+                <Pencil className="w-4 h-4" />
+              </Button>
+            </TooltipComponent>
 
-              <TooltipComponent
-                message={
-                  row.active
-                    ? `Desactivar ${row.name}?`
-                    : `Activar ${row.name}?`
-                }
-              >
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleToggleActive(row)}
-                >
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </Button>
-              </TooltipComponent>
-            </div>
-          )}
-        />
-
-        {modalOpen && (
-          <ProfesionalModal
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-            profesional={selected}
-            especialidades={especialidades}
-          />
+            <TooltipComponent message={row.active ? `Desactivar ${row.name}?` : `Activar ${row.name}?`}>
+              <Button variant="ghost" size="icon" onClick={() => handleToggleActive(row)}>
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </Button>
+            </TooltipComponent>
+          </div>
         )}
-      </div>
+      />
+    {modalOpen && (
+      <ProfesionalModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        profesional={selected}
+        especialidades={especialidades}
+      />
+    )}
+  </div>
     </AppLayout>
   )
 }

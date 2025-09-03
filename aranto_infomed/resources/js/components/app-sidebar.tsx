@@ -8,32 +8,44 @@ import { BookOpen, Folder, LayoutGrid, Users as MedalIcon, WorkflowIcon, Receipt
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutGrid,
+
+  },
+  {
+    title: 'Especialidades',
+    href: '/especialidades',
+    icon: BookOpen,
+  },
+  {
+    title: 'Profesionales',
+    href: '/profesionales',
+    icon: MedalIcon,
+  },
+  {
+    title: 'Tipos de Servicios',
+    href: '/tipo-servicios',
+    icon: WorkflowIcon,
+  },
+  {
+    title: 'Recepción',
+    icon: ReceiptCentIcon,
+    href: null,
+    children: [
       {
-        title: 'Especialidades',
-        href: '/especialidades',
-        icon: BookOpen,
-    },
-    {
-        title: 'Profesionales',
-        href: '/profesionales',
-        icon: MedalIcon,
-    },
-     {
-        title: 'Tipos de Servicios',
-        href: '/tipo-servicios',
-        icon: WorkflowIcon,
-    },
-     {
-        title: 'Recepción',
+        title: 'Nueva visita',
         href: '/reception',
-        icon: ReceiptCentIcon,
-    },
-];
+      },
+      {
+        title: 'Visitas registradas',
+        href: '/reception/visits',
+      },
+    ],
+  },
+]
+
 
 const footerNavItems: NavItem[] = [
     {

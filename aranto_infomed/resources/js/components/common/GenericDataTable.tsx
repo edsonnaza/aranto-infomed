@@ -3,36 +3,28 @@
 import * as React from "react"
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
+  Row,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   useReactTable,
-  flexRender
-   
+  SortingState,
+  ColumnFiltersState,
+  VisibilityState,
+  flexRender,
 } from "@tanstack/react-table"
 import { ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
   DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
- 
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { router } from "@inertiajs/react"
 // 🔹 Normaliza texto: minúsculas + sin acentos
 function normalizeText(text: unknown) {
   return text
@@ -43,29 +35,28 @@ function normalizeText(text: unknown) {
 }
 
 // 🔹 Filtro global insensible a acentos/mayúsculas
-import type { Row } from "@tanstack/react-table"
-
 function globalTextFilter<TData>(row: Row<TData>, columnId: string, filterValue: string) {
   const value = row.getValue(columnId)
   const normalizedValue = normalizeText(value)
-  const normalizedFilter = normalizeText(filterValue)
-  return (
-    typeof normalizedValue === "string" &&
-    typeof normalizedFilter === "string" &&
-    normalizedValue.includes(normalizedFilter)
-  )
+  const normalizedFilter = normalizeText(filterValue || "")
+  return typeof normalizedValue === "string" && normalizedValue.includes(normalizedFilter || "")
 }
 
 interface GenericDataTableProps<TData> {
   columns: ColumnDef<TData>[]
   data: TData[]
+  links?: { label: string; url: string | null; active: boolean }[]
   renderActions?: (row: TData) => React.ReactNode
+  serverSidePagination?: boolean
+  filterColumn?: keyof TData
 }
 
 export function GenericDataTable<TData>({
   columns,
   data,
+  links,
   renderActions,
+  serverSidePagination = false,
 }: GenericDataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -73,7 +64,7 @@ export function GenericDataTable<TData>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
 
-  // 🔹 Combinar columnas + columna de acciones si se pasó renderActions
+  // 🔹 Combinar columnas + columna de acciones
   const enhancedColumns = React.useMemo<ColumnDef<TData>[]>(() => {
     if (!renderActions) return columns
     return [
@@ -92,23 +83,22 @@ export function GenericDataTable<TData>({
     state: {
       sorting,
       columnFilters,
-      globalFilter, 
+      globalFilter,
       columnVisibility,
       rowSelection,
     },
-    filterFns: {
-      global: globalTextFilter, 
-    },
-    globalFilterFn: globalTextFilter, 
+    filterFns: { global: globalTextFilter },
+    globalFilterFn: globalTextFilter,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter, 
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    manualPagination: serverSidePagination,
   })
 
   return (
@@ -121,7 +111,6 @@ export function GenericDataTable<TData>({
           onChange={(e) => setGlobalFilter(e.target.value)}
           className="max-w-sm"
         />
-        {/* 🔹 Selector de columnas */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">
@@ -131,23 +120,19 @@ export function GenericDataTable<TData>({
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-               <DropdownMenuCheckboxItem
-                key={column.id}
-                className="capitalize"
-                checked={column.getIsVisible()}
-                onCheckedChange={(value) => column.toggleVisibility(!!value)}
-              >
-                {typeof column.columnDef.header === "string"
-                  ? column.columnDef.header
-                  : String(column.id)}
-              </DropdownMenuCheckboxItem>
-
+              .filter((col) => col.getCanHide())
+              .map((col) => (
+                <DropdownMenuCheckboxItem
+                  key={col.id}
+                  className="capitalize"
+                  checked={col.getIsVisible()}
+                  onCheckedChange={(value) => col.toggleVisibility(!!value)}
+                >
+                  {typeof col.columnDef.header === "string" ? col.columnDef.header : col.id}
+                </DropdownMenuCheckboxItem>
               ))}
           </DropdownMenuContent>
         </DropdownMenu>
-
       </div>
 
       {/* 🔹 Tabla */}
@@ -169,14 +154,9 @@ export function GenericDataTable<TData>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+                    <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                   ))}
                 </TableRow>
               ))
@@ -192,46 +172,21 @@ export function GenericDataTable<TData>({
       </div>
 
       {/* 🔹 Paginación */}
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} fila(s) seleccionadas.
+      {serverSidePagination && links && (
+        <div className="flex justify-end gap-2 mt-4">
+          {links.map((link, idx) => (
+            <Button
+              key={idx}
+              variant={link.active ? "default" : "outline"}
+              size="sm"
+              onClick={() => link.url && router.get(link.url)}
+              disabled={!link.url}
+            >
+              <span dangerouslySetInnerHTML={{ __html: link.label }} />
+            </Button>
+          ))}
         </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Primero
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Siguiente
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-          >
-            Último
-          </Button>
-        </div>
-      </div>
-</div>
+      )}
+    </div>
   )
 }

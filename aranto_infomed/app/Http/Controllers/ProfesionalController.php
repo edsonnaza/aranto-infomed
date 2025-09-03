@@ -9,53 +9,41 @@ use Inertia\Inertia;
 
 class ProfesionalController extends Controller
 {
-    public function index()
-    {
-        $profesionales = Profesional::with('especialidad')->get();
+ public function index()
+{   
+    // Traer profesionales con paginación
+    $profesionales = Profesional::with('especialidad')->paginate(10);
 
-        $columns = [
-            ['label' => 'ID', 'field' => 'id'],
-            ['label' => 'Nombre', 'field' => 'name'],
-            ['label' => 'Apellido', 'field' => 'last_name'],
-            ['label' => 'Especialidad', 'field' => 'especialidad.nombre'],
-            ['label' => 'Activo', 'field' => 'active'],
-            ['label' => 'Comisión', 'field' => 'comision_percentage'],
-            ['label' => 'Email', 'field' => 'email'],
-            ['label' => 'Teléfono', 'field' => 'phone_number'],
-            ['label' => 'Fecha Alta', 'field' => 'fecha_alta'],
-            ['label' => 'CDI', 'field' => 'doc_cdi'],
-            ['label' => 'Comisión Interno', 'field' => 'comision_interno'],
-            ['label' => 'Comisión Externo', 'field' => 'comision_externo'],
+    // Transformamos los items, pero **sin perder la paginación**
+    $profesionales->getCollection()->transform(function ($prof) {
+        return [
+            'id' => $prof->id,
+            'name' => $prof->name,
+            'last_name' => $prof->last_name,
+            'especialidad' => $prof->especialidad ? [
+                'id' => $prof->especialidad->id,
+                'nombre' => $prof->especialidad->nombre,
+            ] : null,
+            'active' => $prof->active,
+            'comision_percentage' => $prof->comision_percentage,
+            'email' => $prof->email,
+            'phone_number' => $prof->phone_number,
+            'fecha_alta' => $prof->fecha_alta,
+            'doc_cdi' => $prof->doc_cdi,
+            'comision_interno' => $prof->comision_interno,
+            'comision_externo' => $prof->comision_externo,
         ];
+    });
 
-        $data = $profesionales->map(function ($prof) {
-            return [
-                'id' => $prof->id,
-                'name' => $prof->name,
-                'last_name' => $prof->last_name,
-                'especialidad' => $prof->especialidad ? [
-                    'id' => $prof->especialidad->id,
-                    'nombre' => $prof->especialidad->nombre
-                ] : null,
-                'active' => $prof->active,
-                'comision_percentage' => $prof->comision_percentage,
-                'email' => $prof->email,
-                'phone_number' => $prof->phone_number,
-                'fecha_alta' => $prof->fecha_alta,
-                'doc_cdi' => $prof->doc_cdi,
-                'comision_interno' => $prof->comision_interno,
-                'comision_externo' => $prof->comision_externo,
-            ];
-        });
+    $especialidades = Especialidad::select('id', 'nombre')->orderBy('nombre')->get();
 
-        $especialidades = Especialidad::select('id', 'nombre')->orderBy('nombre')->get();
+    // Enviamos **el paginator completo a Inertia**
+    return Inertia::render('profesionales/Profesionales', [
+        'data' => $profesionales, // Esto mantiene 'data', 'links' y 'meta'
+        'especialidades' => $especialidades,
+    ]);
+}
 
-        return Inertia::render('profesionales/Profesionales', [
-            'columns' => $columns,
-            'data' => $data,
-            'especialidades' => $especialidades,
-        ]);
-    }
 
     public function store(Request $request)
     {

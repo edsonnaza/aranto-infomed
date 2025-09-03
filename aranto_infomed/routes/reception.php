@@ -14,4 +14,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/reception/services/price', [ReceptionController::class, 'getServicePrice'])
         ->name('reception.services.price');
     Route::post('/reception/visits', [ReceptionController::class, 'storePatientVisit'])->name('reception.storePatientVisit');
+    Route::get('/reception/visits', [ReceptionController::class, 'visitsRegistered'])->name('reception.visits');
+    Route::patch('/reception/visits/{id}', [ReceptionController::class, 'cancelVisit'])->name('reception.cancelVisit');
 });

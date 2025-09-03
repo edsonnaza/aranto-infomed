@@ -10,7 +10,7 @@ class TipoServiciosController extends Controller
 {
     public function index()
     {
-        $tipoServicios = ServiceCategories::all();
+        $tipoServicios = ServiceCategories::paginate(10);
 
         $columns = [
             ['label' => 'ID', 'field' => 'id'],
@@ -25,6 +25,8 @@ class TipoServiciosController extends Controller
                 'active' => (bool) $tipoServicio->active,
             ];
         });
+
+
 
         return Inertia::render('tipo-servicios/TipoServicios', [
             'columns' => $columns,

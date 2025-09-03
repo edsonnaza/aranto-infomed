@@ -34,3 +34,41 @@ export const VisitPayloadSchema = z.object({
 })
 
 export type VisitPayload = z.infer<typeof VisitPayloadSchema>
+
+
+export interface PatientVisit {
+  id: number
+  patient: { full_name: string }
+  professional: { full_name: string }
+  seguro: { name: string }
+  visit_status: string
+  created_at: string
+  orders: Orders[]   
+} 
+
+export interface VisitsRegisteredProps {
+  data: {
+    data: PatientVisit[]
+    current_page: number
+    last_page: number
+    per_page: number
+    total: number
+    links: { url: string | null; label: string; active: boolean }[]
+    Orders: Orders[]
+  }
+}
+
+export interface Orders {
+    status: string;
+    visit_status?: string;
+   items: Items[];
+}
+
+export interface Items {
+    id: number;
+    service_name: string;
+    status: string;
+    quantity: number;
+    unit_price: string;
+    total_price: string;
+}
