@@ -94,15 +94,27 @@ export default function VisitsRegistered({ data: paginatedData }: VisitsRegister
         renderActions={(row) => (
             <div className="flex gap-2">
             <TooltipComponent message={`Ver visita #${row.id}`}>
-                <Button variant="ghost" size="icon" onClick={() => handleView(row)}>
-                <Eye className="w-4 h-4" />
+                <Button  style={{ cursor: "pointer" }} variant="ghost" size="icon" onClick={() => handleView(row)}>
+                <Eye className="w-4 h-4 cursor-pointer" />
                 </Button>
             </TooltipComponent>
-            <TooltipComponent message={`Cancelar visita #${row.id}`}>
-                <Button variant="ghost" size="icon" onClick={() => handleCancelClick(row)} disabled={loading}>
-                <Trash2 className="w-4 h-4 text-red-500" />
+            <TooltipComponent message={`Cancelar admisión #${row.id}`}>
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => handleCancelClick(row)} 
+                    disabled={loading || row.visit_status === "cancelled"} 
+                    style={{ cursor: row.visit_status === "cancelled" ? "not-allowed" : "pointer" }}
+                >
+                    <Trash2
+                        className={`w-4 h-4 ${
+                        row.visit_status === "cancelled"
+                            ? "opacity-30 text-gray-900  not-allowed"
+                            : "text-red-500 cursor-pointer"
+                        }`}
+                    />
                 </Button>
-            </TooltipComponent>
+                </TooltipComponent>
             </div>
           )}
         />
