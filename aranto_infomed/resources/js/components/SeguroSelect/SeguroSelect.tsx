@@ -1,49 +1,85 @@
-import * as Select from "@radix-ui/react-select"
+"use client"
+
+import * as React from "react"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Seguro } from "@/types"
 import { Card, CardContent } from "@/components/ui/card"
 
 interface Props {
   seguros: Seguro[]
   value: Seguro | null
-  onChange: (s: Seguro) => void
+  onChange: (s: Seguro | null) => void
 }
 
 export function SeguroSelect({ seguros, value, onChange }: Props) {
+  const [open, setOpen] = React.useState(false)
+
   return (
     <Card>
       <CardContent className="space-y-3">
         <h2 className="text-xl font-bold">Seguro</h2>
-        <Select.Root
-          value={value?.id?.toString() || ""}
-          onValueChange={(val) => {
-            const s = seguros.find((s) => s.id.toString() === val)
-            if (s) onChange(s)
-          }}
-        >
-          <Select.Trigger className="w-full border rounded px-3 py-2 flex justify-between items-center">
-            <Select.Value placeholder="Selecciona un seguro" />
-            <Select.Icon />
-          </Select.Trigger>
 
-          <Select.Content className="bg-white border rounded shadow-md mt-1 z-50">
-            <Select.ScrollUpButton />
-            <Select.Viewport className="p-1 max-h-60 overflow-y-auto">
-              {seguros.map((s) => (
-                <Select.Item
-                  key={s.id}
-                  value={s.id.toString()}
-                  className="px-3 py-1 cursor-pointer rounded hover:bg-gray-100"
-                >
-                  <Select.ItemText>{s.name}</Select.ItemText>
-                </Select.Item>
-              ))}
-            </Select.Viewport>
-            <Select.ScrollDownButton />
-          </Select.Content>
-        </Select.Root>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
+            >
+              {value ? value.name : "Selecciona un seguro"}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-0">
+            <Command>
+              <CommandInput placeholder="Buscar seguro..." />
+              <CommandList>
+                <CommandEmpty>No se encontraron resultados.</CommandEmpty>
+                <CommandGroup>
+                  {seguros.map((s) => (
+                    <CommandItem
+                      key={s.id}
+                      value={s.name}
+                      onSelect={() => {
+                        onChange(s)
+                        setOpen(false)
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value?.id === s.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {s.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
         {value && (
-          <p className="text-sm text-green-600">✔ Seguro seleccionado: {value.name}</p>
+          <p className="text-sm text-green-600">
+            ✔ Seguro seleccionado: {value.name}
+          </p>
         )}
       </CardContent>
     </Card>

@@ -205,7 +205,7 @@ class ReceptionController extends Controller
     {
         $today = Carbon::today();
 
-        $visitsRegistered = PatientVisit::with(['patient', 'professional', 'seguro','orders.items'])
+        $visitsRegistered = PatientVisit::with(['patient', 'professional', 'seguro','orders.items', 'orders.items.professional'])
             ->whereDate('created_at', $today) // 🔥 solo registros de hoy
             ->orderBy('created_at', 'desc')
             ->paginate(10);

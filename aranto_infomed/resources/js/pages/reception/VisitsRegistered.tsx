@@ -14,6 +14,7 @@ import { ModalItemsGeneric } from "@/components/common/ModalItemsGeneric"
 import { StatusIcon, OrderStatus } from "@/components/common/StatusIcons"
 import { ModalAlertGeneric } from "@/components/common/ModalAlertGeneric"
 import { toast } from "sonner"
+import { useReceptionStore } from "@/stores/useReceptionStore"
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: "Recepción", href: "/reception" },
@@ -26,7 +27,7 @@ export default function VisitsRegistered({ data: paginatedData }: VisitsRegister
   const [modalOpen, setModalOpen] = useState(false)
   const [alertOpen, setAlertOpen] = useState(false)
   const [visitToCancel, setVisitToCancel] = useState<PatientVisit | null>(null)
-
+  const { reset } = useReceptionStore()
   const handleView = (visit: PatientVisit) => {
     setSelectedVisit(visit)
     setModalOpen(true)
@@ -51,6 +52,7 @@ export default function VisitsRegistered({ data: paginatedData }: VisitsRegister
           toast.success(`Admisión #${visitToCancel.id} anulada correctamente.`)
           setVisitToCancel(null)
           setAlertOpen(false)
+          reset() 
         },
         onError: () => {
           toast.error("Error al anular la admisión.")
@@ -125,7 +127,7 @@ export default function VisitsRegistered({ data: paginatedData }: VisitsRegister
           <ModalItemsGeneric
             open={modalOpen}
             onClose={() => setModalOpen(false)}
-            title={`Servicios solicitados de ${selectedVisit.patient.full_name}`}
+            title={`# ${selectedVisit.id}: Servicios solicitados de ${selectedVisit.patient.full_name}`}
             orders={selectedVisit.orders}
           />
         )}

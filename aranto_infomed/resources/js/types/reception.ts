@@ -66,6 +66,7 @@ export interface Orders {
 
 export interface Items {
     id: number;
+    professional?: { id: number; full_name: string } | null;
     service_name: string;
     status: string;
     quantity: number;

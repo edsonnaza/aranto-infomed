@@ -8,6 +8,8 @@ import { useReceptionStore } from "@/stores/useReceptionStore"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { router } from "@inertiajs/react"
+import { Loader2 } from "lucide-react"
+import { useState } from "react"
 
 
 
@@ -21,6 +23,8 @@ interface ReceptionProps {
 const breadcrumbs: BreadcrumbItem[] = [{ title: "Ingresar Paciente en Recepción", href: "/reception" }]
 
 export default function ReceptionPage({ seguros, professionals }: ReceptionProps) {
+  const [loading, setLoading] = useState(false)
+  const { reset } = useReceptionStore()
   const {
     patient,
     setPatient,
@@ -31,7 +35,8 @@ export default function ReceptionPage({ seguros, professionals }: ReceptionProps
     cart,
     addService,
     updateQty,
-    updateDiscount,
+    updateDiscountPercent,
+    updateDiscountAmount,
     removeService,
   } = useReceptionStore()
 
@@ -50,12 +55,12 @@ const preparePayload = () => {
   
   const itemsPayload = cart.map((i) => ({
     service_id: i.id,
-    professional_id: professional.id,
+    professional_id: i.professional.id,
     service_name: i.name,
     quantity: i.qty,
     unit_price: Number(i.price_sale),
-    discount_amount: Number((i.price_sale * i.discount) / 100),
-    total_price: Number(i.qty * i.price_sale - (i.qty * i.price_sale * i.discount) / 100),
+    discount_amount: Number((i.price_sale * i.discount_percent) / 100),
+    total_price: Number(i.qty * i.price_sale - (i.qty * i.price_sale * i.discount_percent) / 100),
   }));
 
   const orderPayload = {
@@ -87,16 +92,23 @@ const handleConfirm = () => {
   const payload = preparePayload();
   console.log(payload);
   if (!payload) return toast.error("Faltan datos obligatorios");
-
+  setLoading(true)
   router.post(route("reception.storePatientVisit"), payload, {
     preserveScroll: true,
-    onSuccess: () => toast.success("Visita registrada correctamente"),
+    onSuccess: () =>{ toast.success("Visita registrada correctamente")
+      setLoading(false)
+      setPatient(null)
+      setProfessional(null)
+      reset()
+    },
+     
     onError: (errors) => {
       // errors es un objeto { campo: [mensajes] }
       // Si quieres mostrar todos los mensajes concatenados:
       const messages = Object.values(errors).flat().join(". ");
       toast.error(`❌ Error al intentar registrar la visita: ${messages}`);
     },
+    onFinish: () => setLoading(false),
   });
 };
 
@@ -136,21 +148,22 @@ const handleConfirm = () => {
         {/* Carrito */}
         <CartTable
           seguro={seguro}
+          profesional={professional}
           cart={cart}
           addService={addService}       
           updateQty={updateQty}
-          updateDiscount={updateDiscount}
+          updateDiscountPercent={updateDiscountPercent}
+          updateDiscountAmount={updateDiscountAmount}
           removeService={removeService}
         />
         </div>
 
       {/* Confirmar */}
       <div className="col-span-2 flex justify-end p-6">
-      <Button onClick={handleConfirm}>
-        Confirmar y Enviar a Caja
+      <Button className="bg-blue-600 cursor-pointer hover:bg-blue-900" onClick={handleConfirm} disabled={loading}>
+      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {loading ? "Guardando..." : "Confirmar y Enviar a Caja"}
       </Button>
-
-
       </div>
     </AppLayout>
   )

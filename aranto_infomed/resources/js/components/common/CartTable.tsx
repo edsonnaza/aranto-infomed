@@ -12,6 +12,7 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table"
+//import { Badge } from "@/components/ui/badge"
 
 import { useSearchServices } from "@/hooks/useSearchServices"
 import { formatPrice } from "@/utils/formatPrice"
@@ -20,10 +21,12 @@ import { Seguro } from "@/types/seguro"
 
 interface CartTableProps {
   seguro: Seguro | null
+  profesional: { id: number; full_name: string } | null
   cart: ServiceItem[]
   addService: (s: ServiceItem) => void
   updateQty: (id: number, qty: number) => void
-  updateDiscount: (id: number, discount: number) => void
+  updateDiscountPercent: (id: number, discount: number) => void
+  updateDiscountAmount: (id: number, discount: number) => void
   removeService: (id: number) => void
 }
 
@@ -32,7 +35,8 @@ export function CartTable({
   cart,
   addService,
   updateQty,
-  updateDiscount,
+  updateDiscountPercent,
+  updateDiscountAmount,
   removeService,
 }: CartTableProps) {
   const [searchService, setSearchService] = useState("")
@@ -42,11 +46,12 @@ const resultsServices = useSearchServices(
   seguro ? { id: seguro.id } : { id: 1 }
 )
 
-  const total = cart.reduce((sum, item) => {
-    const subtotal = item.qty * item.price_sale
-    const final = subtotal - (subtotal * item.discount) / 100
-    return sum + final
-  }, 0)
+ const total = cart.reduce((sum, item) => {
+  const subtotal = item.qty * item.price_sale
+  const final = subtotal - item.discount_amount
+  return sum + final
+}, 0)
+
 
   return (
     <Card className="col-span-2">
@@ -67,7 +72,7 @@ const resultsServices = useSearchServices(
                 key={`${s.id}-${s.seguro_id}`}
                 className="cursor-pointer hover:bg-gray-100 p-1"
                 onClick={() => {
-                  addService({ ...s, qty: 1, discount: 0 })
+                  addService({ ...s, qty: 1, discount_percent: 0 })
                   setSearchService("")
                 }}
               >
@@ -82,10 +87,12 @@ const resultsServices = useSearchServices(
           <TableHeader>
             <TableRow>
               <TableHead>Servicio</TableHead>
+              <TableHead>Profesional</TableHead>
               <TableHead>Seguro</TableHead>
               <TableHead>Cant.</TableHead>
               <TableHead>Precio</TableHead>
-              <TableHead>Desc. %</TableHead>
+              <TableHead>Descuento %</TableHead>
+              <TableHead>Descuento Gs</TableHead>
               <TableHead>Subtotal</TableHead>
               <TableHead></TableHead>
             </TableRow>
@@ -93,10 +100,11 @@ const resultsServices = useSearchServices(
           <TableBody>
             {cart.map((item) => {
               const subtotal = item.qty * item.price_sale
-              const final = subtotal - (subtotal * item.discount) / 100
+              const final = subtotal - (subtotal * item.discount_percent) / 100
               return (
                 <TableRow key={`${item.id}-${item.seguro_id}`}>
                   <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.professional.full_name}</TableCell>
                   <TableCell>{item.seguro_name}</TableCell>
                   <TableCell>
                     <Input
@@ -109,19 +117,41 @@ const resultsServices = useSearchServices(
                       className="w-16"
                     />
                   </TableCell>
-                  <TableCell>{formatPrice(item.price_sale)}</TableCell>
+                  <TableCell>{formatPrice(Number(item.price_sale))}</TableCell>
                   <TableCell>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={item.discount}
-                      onChange={(e) =>
-                        updateDiscount(item.id, Number(e.target.value))
-                      }
-                      className="w-16"
-                    />
+                    {/* % de descuento */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={item.discount_percent}
+                        onChange={(e) =>
+                          updateDiscountPercent(item.id, Number(e.target.value))
+                        }
+                        className="w-25"
+                      />
+                      <span className="text-sm text-gray-600">%</span>
+                    </div>
+                   </TableCell>
+                  <TableCell>
+                    {/* monto fijo */}
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        max={item.price_sale}
+                      
+                        min={0}
+                        value={formatPrice(item.discount_amount)}
+                        onChange={(e) =>
+                          updateDiscountAmount(item.id, Number(e.target.value))
+                        }
+                        className="w-25"
+                      />
+                      <span className="text-sm text-gray-600">Gs</span>
+                    </div>
                   </TableCell>
+
                   <TableCell>{formatPrice(final)}</TableCell>
                   <TableCell>
                     <Button

@@ -8,6 +8,7 @@ import { GenericDataTable } from "./GenericDataTable"
 import { StatusIcon, OrderStatus } from "@/components/common/StatusIcons"
 import { Orders, Items } from "@/types/reception"
 import { ColumnDef, Row } from "@tanstack/react-table"
+import { formatPrice } from "@/utils/formatPrice"
 
 interface ModalItemsGenericProps<T> {
   open: boolean
@@ -21,6 +22,7 @@ interface ModalItemsGenericProps<T> {
 
 interface OrderItem {
   id: number
+  professional: { id: number; full_name: string } 
   service_name: string
   quantity: number
   unit_price: string
@@ -41,37 +43,59 @@ export function ModalItemsGeneric<T>({
   // 🔹 Extrae items de orders si se pasó orders
  const processedItems: OrderItem[] = React.useMemo(() => {
   if (items) {
-    // convertimos Items a OrderItem si es necesario
-    return items.map((item) => ({
-      ...item,
-      orderStatus: "pending" as OrderStatus, // o algún valor por defecto
-    }))
+    // ...
   }
   if (orders) {
     return orders.flatMap(order =>
       order.items.map((item: Items) => ({
         ...item,
         orderStatus: order.status,
+        professional: item.professional ?? { id: 0, full_name: '' }, // Agregar esta línea
       }))
     ) as OrderItem[]
   }
   return []
 }, [items, orders])
 
-
-  // 🔹 Columnas por defecto si no se pasan
+// 🔹 Columnas por defecto si no se pasan
 const defaultColumns: ColumnDef<OrderItem>[] = React.useMemo(() => [
   { accessorKey: "service_name", header: "Servicio" },
   {
+    accessorKey: "professional.full_name",
+    header: "Profesional",
+    cell: ({ row }: { row: Row<OrderItem> }) =>
+      row.original.professional?.full_name ?? "—",
+  },
+  {
     accessorKey: "orderStatus",
     header: "Estado",
-    cell: ({ row }: { row: Row<OrderItem> }) => <StatusIcon status={row.original.orderStatus} />,
+    cell: ({ row }: { row: Row<OrderItem> }) => (
+      <StatusIcon status={row.original.orderStatus} />
+    ),
   },
-  { accessorKey: "quantity", header: "Cantidad" },
-  { accessorKey: "unit_price", header: "Precio unitario" },
-  { accessorKey: "total_price", header: "Total" },
+  { accessorKey: "quantity", header: ()=><div className="text-center">Cantidad</div>,
+    cell: ({ getValue }) => {
+      const value = getValue<number>()
+      return <div className="text-center">{formatPrice(Number(value))}</div>
+    }
+  },
+  {
+    accessorKey: "total_price",
+    header: () => <div className="text-right">Total c/ Desc.</div>,
+    cell: ({ getValue }) => {
+      const value = getValue<string>()
+      return <div className="text-right">{"Gs " + formatPrice(Number(value))}</div>
+    },
+  },
+  {
+    accessorKey: "unit_price",
+    header: () => <div className="text-right">Precio unitario</div>,
+    cell: ({ getValue }) => {
+      const value = getValue<string>()
+      return <div className="text-right">{"Gs " + formatPrice(Number(value))}</div>
+    },
+  },
 ], [])
-
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

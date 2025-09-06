@@ -182,7 +182,16 @@ export function GenericDataTable<TData>({
               onClick={() => link.url && router.get(link.url)}
               disabled={!link.url}
             >
-              <span dangerouslySetInnerHTML={{ __html: link.label }} />
+             <span
+              dangerouslySetInnerHTML={{
+                __html:
+                  link.label === "&laquo; Previous"
+                    ? "&laquo; Anterior"
+                    : link.label === "Next &raquo;"
+                    ? "Siguiente &raquo;"
+                    : link.label,
+              }}
+            />
             </Button>
           ))}
         </div>
