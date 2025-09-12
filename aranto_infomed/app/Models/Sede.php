@@ -30,4 +30,5 @@ class Sede extends Model
     {
         return $this->hasMany(Profesional::class);
     }
+    
 }

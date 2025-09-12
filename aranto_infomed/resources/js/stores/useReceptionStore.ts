@@ -1,112 +1,96 @@
 import { create } from "zustand"
-import { Patient } from "@/types/patient"
-import { Professional } from "@/types/professional"
-import { Seguro } from "@/types/seguro"
-import { ServiceItem } from "@/types/services"
+
+// Interfaces según la estructura deseada
+interface OrderItem {
+  id: number;
+  service_id: number;
+  order_id: number;
+  professional: {
+    id: string;
+    full_name: string;
+  };
+  service_name: string;
+  quantity: number;
+  total_price: number;
+  unit_price: number;
+  total_amount: number;
+  status: "pending";
+}
+
+interface Order {
+  id: number;
+  status: "pending";
+  total_amount_items: number;
+  items: OrderItem[];
+}
+
+export interface PayloadToSave {
+  patient: {
+    id: string;
+    full_name: string;
+  };
+  orders: Order;
+}
 
 interface ReceptionState {
-  patient: Patient | null
-  professional: Professional | null
-  seguro: Seguro | null
-  cart: ServiceItem[]
-  setPatient: (p: Patient | null) => void
-  setProfessional: (p: Professional | null) => void
-  setSeguro: (s: Seguro | null) => void
-  addService: (s: ServiceItem, seguro_id?: number) => void
-  updateQty: (id: number, qty: number) => void
-  updateDiscountPercent: (id: number, discount: number) => void
-  updateDiscountAmount: (id: number, amount: number) => void
-  updateItemSeguro: (id: number, seguro_id: number) => void
-  removeService: (id: number) => void
-  reset: () => void
+  patient: { id: string; full_name: string } | null;
+  orders: Order | null;
+  setPatient: (p: { id: string; full_name: string } | null) => void;
+  addOrderItem: (item: OrderItem) => void;
+  updateOrderItem: (item: OrderItem) => void;
+  removeOrderItem: (itemId: number) => void;
+  reset: () => void;
 }
+
 
 export const useReceptionStore = create<ReceptionState>((set) => ({
   patient: null,
-  professional: null,
-  seguro: null,
-  cart: [],
-  setPatient: (p) =>
-    set(() => ({
-      patient: p,
-      seguro: p?.seguro_id ? { id: p.seguro_id, name: p.seguro_name ?? "Seguro" } : null,
-    })),
-  setProfessional: (p) => set({ professional: p }),
-  setSeguro: (s) => set({ seguro: s }),
- addService: (s) =>
-  set((state) => {
-    const exists = state.cart.find(
-      (i) => i.id === s.id && i.seguro_id === s.seguro_id
-    )
-    if (exists) {
-      return {
-        cart: state.cart.map((i) =>
-          i.id === s.id && i.seguro_id === s.seguro_id
-            ? { ...i, qty: i.qty + 1 }
-            : i
-        ),
+  orders: null,
+  setPatient: (p) => set({ patient: p }),
+  addOrderItem: (item) =>
+    set((state) => {
+      let order = state.orders;
+      if (!order) {
+        order = {
+          id: Date.now(), // temporal, reemplazar por id real si es necesario
+          status: "pending",
+          total_amount_items: item.total_amount,
+          items: [item],
+        };
+      } else {
+        order = {
+          ...order,
+          items: [...order.items, item],
+          total_amount_items: order.total_amount_items + item.total_amount,
+        };
       }
-    }
-    return {
-      cart: [
-        ...state.cart,
-        {
-          ...s,
-          qty: 1,
-          discount_percent: 0,
-          discount_amount: 0,
-          professional: state.professional
-            ? { id: state.professional.id, full_name: state.professional.full_name }
-            : { id: 0, full_name: "Sin profesional" },
+      return { orders: order };
+    }),
+  updateOrderItem: (item) =>
+    set((state) => {
+      if (!state.orders) return {};
+      const items = state.orders.items.map((i) => (i.id === item.id ? item : i));
+      const total_amount_items = items.reduce((sum, i) => sum + i.total_amount, 0);
+      return {
+        orders: {
+          ...state.orders,
+          items,
+          total_amount_items,
         },
-      ],
-    }
-  }),
-  updateQty: (id, qty) =>
-    set((state) => ({
-      cart: state.cart.map((i) => (i.id === id ? { ...i, qty } : i)),
-    })),
-  updateDiscount: (id: number, discount: number) =>
-    set((state) => ({
-      cart: state.cart.map((i) =>
-        i.id === id ? { ...i, discount } : i
-      ),
-    })),
-  updateDiscountPercent: (id: number, percent: number) =>
-  set((state) => ({
-    cart: state.cart.map((i) =>
-      i.id === id
-        ? {
-            ...i,
-            discount_percent: percent,
-            discount_amount: ((i.price_sale * i.qty) * percent) / 100,
-          }
-        : i
-    ),
-  })),
-
-updateDiscountAmount: (id: number, amount: number) =>
-  set((state) => ({
-    cart: state.cart.map((i) =>
-      i.id === id
-        ? {
-            ...i,
-            discount_amount: amount,
-            discount_percent: (amount / (i.price_sale * i.qty)) * 100,
-          }
-        : i
-    ),
-  })),
-
-  updateItemSeguro: (id, seguro_id) =>
-    set((state) => ({
-      cart: state.cart.map((i) =>
-        i.id === id ? { ...i, seguro_id } : i
-      ),
-    })),
-  removeService: (id) =>
-    set((state) => ({
-      cart: state.cart.filter((i) => i.id !== id),
-    })),
-   reset: () => set({ patient: null, professional: null, seguro: null, cart: [] }),
+      };
+    }),
+  removeOrderItem: (itemId) =>
+    set((state) => {
+      if (!state.orders) return {};
+      const items = state.orders.items.filter((i) => i.id !== itemId);
+      const total_amount_items = items.reduce((sum, i) => sum + i.total_amount, 0);
+      return {
+        orders: {
+          ...state.orders,
+          items,
+          total_amount_items,
+        },
+      };
+    }),
+  reset: () => set({ patient: null, orders: null }),
 }))

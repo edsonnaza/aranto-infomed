@@ -24,7 +24,7 @@ export const VisitOrderSchema = z.object({
 })
 
 export const VisitPayloadSchema = z.object({
-  patient_id: z.number().nullable(),
+  patient_id: z.number(),
   professional_id: z.number().nullable(),
   seguro_id: z.number().nullable(),
   sede_id: z.number().nullable(),
@@ -61,6 +61,7 @@ export interface VisitsRegisteredProps {
 export interface Orders {
     status: string;
     visit_status?: string;
+    patient?: { full_name: string };
    items: Items[];
 }
 
@@ -72,4 +73,35 @@ export interface Items {
     quantity: number;
     unit_price: string;
     total_price: string;
+}
+
+interface OrderItem {
+  id: number;
+  service_id: number;
+  order_id: number;
+  professional: {
+    id: string;
+    full_name: string;
+  };
+  service_name: string;
+  quantity: number;
+  total_price: number;
+  unit_price: number;
+  total_amount: number;
+  status: "pending";
+}
+
+interface Order {
+  id: number;
+  status: "pending";
+  total_amount_items: number;
+  items: OrderItem[];
+}
+
+export interface PayloadToSave {
+  patient: {
+    id: string;
+    full_name: string;
+  };
+  orders: Order;
 }

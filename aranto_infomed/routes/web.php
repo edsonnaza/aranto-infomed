@@ -21,3 +21,4 @@ require __DIR__.'/tipo_servicios.php';
 require __DIR__.'/reception.php';
 require __DIR__.'/patients.php';
 require __DIR__.'/seguros.php';
+require __DIR__.'/sede.php';

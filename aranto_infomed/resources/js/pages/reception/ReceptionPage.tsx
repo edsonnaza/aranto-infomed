@@ -2,109 +2,85 @@
 
 import { Head } from "@inertiajs/react"
 import AppLayout from "@/layouts/app-layout"
-import { Professional, Seguro, Patient } from "@/types"
 import { BreadcrumbItem } from "@/types/index.d"
-import { useReceptionStore } from "@/stores/useReceptionStore"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { router } from "@inertiajs/react"
-import { Loader2 } from "lucide-react"
-import { useState } from "react"
+import { useReceptionStore } from "@/stores/useReceptionStore"
+import { useReactToPrint } from "react-to-print"
+import Ticket from "@/components/common/Ticket"
+import {  PatientVisit, PayloadToSave } from "@/types/reception"
+import { Seguro, Professional, Patient } from "@/types"
 
-
-
-import { PatientInput, SeguroSelect, ProfessionalInput, CartTable } from "./index"
-
-interface ReceptionProps {
-  seguros: Seguro[]
-  professionals: Professional[]
-}
+import { PatientInput, CartTable } from "./index"
+import { SeguroSelect } from "@/components/SeguroSelect/SeguroSelect"
+import { ProfessionalInput } from "@/components/ProfessionalInput/ProfesionalInput"
+ 
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: "Ingresar Paciente en Recepción", href: "/reception" }]
 
-export default function ReceptionPage({ seguros, professionals }: ReceptionProps) {
+type ReceptionPageProps = {
+  seguros: Seguro[];
+  professionals: Professional[];
+};
+
+export default function ReceptionPage({ seguros, professionals }: ReceptionPageProps) {
+  const [ticketData, setTicketData] = useState<PayloadToSave | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [seguroSeleccionado, setSeguroSeleccionado] = useState<Seguro | null>(null);
+  const [profesionalSeleccionado, setProfesionalSeleccionado] = useState<Professional | null>(null);
+  const handlePrint = useReactToPrint({ contentRef });
+
+  // Efecto: cuando ticketData cambie, dispara impresión
+  useEffect(() => {
+    if (ticketData) {
+      handlePrint()
+    }
+  }, [ticketData, handlePrint])
+
   const [loading, setLoading] = useState(false)
-  const { reset } = useReceptionStore()
-  const {
-    patient,
-    setPatient,
-    professional,
-    setProfessional,
-    seguro,
-    setSeguro,
-    cart,
-    addService,
-    updateQty,
-    updateDiscountPercent,
-    updateDiscountAmount,
-    removeService,
-  } = useReceptionStore()
+  const { patient, orders, setPatient, addOrderItem, updateOrderItem, removeOrderItem, reset } = useReceptionStore()
+
+  // Cuando se selecciona un paciente, setear seguro por defecto
+  const handleSelectPatient = (p: Patient) => {
+    setPatient({ id: String(p.id), full_name: p.full_name });
+    if (p && p.seguro) {
+      const seguro = seguros.find((s) => s.name === p.seguro.name) || null;
+      setSeguroSeleccionado(seguro);
+    } else {
+      setSeguroSeleccionado(null);
+    }
+  };
+
 
 const preparePayload = () => {
-  if (!patient || !professional || !seguro) {
-    toast.error("Por favor, seleccione un paciente, profesional y seguro.")
-    return
+  if (!patient || !orders || !orders.items.length) {
+    toast.error("Por favor, seleccione un paciente y agregue al menos un servicio.");
+    return null;
   }
-
-  if (cart.length === 0) {
-    toast.error("El carrito está vacío. Agregue al menos un servicio.")
-    return
-    
-  };
-
-  
-  const itemsPayload = cart.map((i) => ({
-    service_id: i.id,
-    professional_id: i.professional.id,
-    service_name: i.name,
-    quantity: i.qty,
-    unit_price: Number(i.price_sale),
-    discount_amount: Number((i.price_sale * i.discount_percent) / 100),
-    total_price: Number(i.qty * i.price_sale - (i.qty * i.price_sale * i.discount_percent) / 100),
-  }));
-
-  const orderPayload = {
-    professional_id: professional.id,
-    total_amount: itemsPayload.reduce((sum, i) => sum + i.total_price, 0),
-    discount_amount: 0,
-    discount_percent: 0,
-    final_amount: itemsPayload.reduce((sum, i) => sum + i.total_price, 0),
-    commission_percentage: Number(professional.comision_percentage ?? 0),
-    commission_amount: 0,
-    status: "pending",
-    created_by: null,
-    items: itemsPayload,
-  };
-
   return {
-    patient_id: patient.id,
-    professional_id: professional.id,
-    seguro_id: seguro.id,
-    visit_status: "waiting",
-    sede_id: 1,
-    created_by: null,
-    order: orderPayload,
+    patient,
+    orders,
   };
 };
+
 
 // En el botón confirmar
 const handleConfirm = () => {
   const payload = preparePayload();
-  console.log(payload);
-  if (!payload) return toast.error("Faltan datos obligatorios");
-  setLoading(true)
+  if (!payload) return;
+  setLoading(true);
   router.post(route("reception.storePatientVisit"), payload, {
     preserveScroll: true,
-    onSuccess: () =>{ toast.success("Visita registrada correctamente")
-      setLoading(false)
-      setPatient(null)
-      setProfessional(null)
-      reset()
+    onSuccess: () => {
+      toast.success("Visita registrada correctamente");
+      setLoading(false);
+      setTicketData(payload);
+      reset();
     },
-     
     onError: (errors) => {
-      // errors es un objeto { campo: [mensajes] }
-      // Si quieres mostrar todos los mensajes concatenados:
       const messages = Object.values(errors).flat().join(". ");
       toast.error(`❌ Error al intentar registrar la visita: ${messages}`);
     },
@@ -117,46 +93,39 @@ const handleConfirm = () => {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Recepción" />
 
+
+
       <div className="grid gap-6 p-6 grid-cols-2">
         {/* Paciente */}
         <PatientInput
           value={patient}
-          onSelect={(p: Patient) => {
-            setPatient(p)
-            setSeguro(
-              seguros.find((s: Seguro) => s.id === p.seguro_id) ??
-                seguros.find((s: Seguro) => s.name === "Particular") ??
-                { id: 1, name: "Particular" }
-            )
-          }}
+          onSelect={handleSelectPatient}
         />
 
         {/* Seguro */}
         <SeguroSelect
           seguros={seguros}
-          value={seguro}
-          onChange={setSeguro}
+          value={seguroSeleccionado}
+          onChange={setSeguroSeleccionado}
         />
 
         {/* Profesional */}
         <ProfessionalInput
           professionals={professionals}
-          value={professional}
-          onSelect={setProfessional}
+          value={profesionalSeleccionado}
+          onSelect={setProfesionalSeleccionado}
         />
 
-        {/* Carrito */}
+        {/* Tabla de órdenes/items */}
         <CartTable
-          seguro={seguro}
-          profesional={professional}
-          cart={cart}
-          addService={addService}       
-          updateQty={updateQty}
-          updateDiscountPercent={updateDiscountPercent}
-          updateDiscountAmount={updateDiscountAmount}
-          removeService={removeService}
+          order={orders}
+          addOrderItem={addOrderItem}
+          updateOrderItem={updateOrderItem}
+          removeOrderItem={removeOrderItem}
+          seguro={seguroSeleccionado}
+          profesional={profesionalSeleccionado}
         />
-        </div>
+      </div>
 
       {/* Confirmar */}
       <div className="col-span-2 flex justify-end p-6">
@@ -165,6 +134,14 @@ const handleConfirm = () => {
       {loading ? "Guardando..." : "Confirmar y Enviar a Caja"}
       </Button>
       </div>
+      
+      {/* tu UI */}
+
+    <div ref={contentRef}>
+      {/* Contenido que se quiere imprimir */}
+      <Ticket data={ticketData} />
+    </div>
+
     </AppLayout>
   )
 }
