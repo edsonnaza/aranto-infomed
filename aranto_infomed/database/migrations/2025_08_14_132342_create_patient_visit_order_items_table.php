@@ -16,7 +16,9 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained('patient_visit_orders')->onDelete('cascade');
             $table->unsignedBigInteger('service_id')->nullable(); // si tenés catálogo de servicios
             $table->string('service_name'); // para guardar el nombre exacto en caso de que cambie el catálogo
+            $table->foreignId('seguro_id')->nullable()->constrained('seguros')->nullOnDelete();
             $table->foreignId('profesional_id')->nullable()->constrained('profesionales')->nullOnDelete();
+            $table->integer('commission_percentage')->nullable();
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 12, 2)->default(0);
             $table->decimal('discount_amount', 12, 2)->default(0);

@@ -5,12 +5,11 @@ export type Professional = {
     last_name: string; 
     full_name: string;
     active: boolean;
-    comision_percentage?: number;
+    commission_percentage?: number;
     email?: string;
     phone_number?: string;
     fecha_alta?: string;
     doc_cdi?: string;
-    comision_interno?: string;
-    comision_externo?: string;
-
+    commission_interno?: string;
+    commission_externo?: string;
 }

@@ -17,6 +17,7 @@ class PatientVisitOrderItem extends Model
         'total_price',
         'commission_amount',
         'commission_percentage',
+        'seguro_id',
         'discount_percentage',
         'final_amount',
         'status',

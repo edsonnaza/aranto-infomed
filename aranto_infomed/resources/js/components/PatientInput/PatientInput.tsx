@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 
 interface PatientInputProps {
   value: Patient | null
-  onSelect: (patient: Patient) => void
+  onSelect: (patient: Patient | null) => void
 }
 
 export  function PatientInput({ value, onSelect }: PatientInputProps) {
@@ -19,9 +19,15 @@ export  function PatientInput({ value, onSelect }: PatientInputProps) {
         <h2 className="text-xl font-bold">Paciente</h2>
         <Input
           placeholder="Buscar paciente..."
-          value={value?.full_name || search}
+          value={value ? value.full_name : search}
           onChange={(e) => setSearch(e.target.value)}
           onFocus={(e) => e.target.select()}
+          onClick={() => {
+            if (value) {
+              onSelect(null); // Limpia el paciente seleccionado
+              setSearch("");
+            }
+          }}
         />
 
         {results.length > 0 && search.length > 2 && !value && (

@@ -1,5 +1,5 @@
 export type Patient = { 
-     id?: number
+  id?: number
   full_name: string
   document?: string
   dob?: string

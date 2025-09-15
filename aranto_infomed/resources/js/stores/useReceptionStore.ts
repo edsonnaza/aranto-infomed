@@ -1,46 +1,32 @@
 import { create } from "zustand"
+import { Patient } from "@/types"
+import { Order, OrderItem } from "@/types/reception"
 
-// Interfaces según la estructura deseada
-interface OrderItem {
-  id: number;
-  service_id: number;
-  order_id: number;
-  professional: {
-    id: string;
-    full_name: string;
-  };
-  service_name: string;
-  quantity: number;
-  total_price: number;
-  unit_price: number;
-  total_amount: number;
-  status: "pending";
-}
 
-interface Order {
-  id: number;
-  status: "pending";
-  total_amount_items: number;
-  items: OrderItem[];
-}
 
 export interface PayloadToSave {
   patient: {
     id: string;
     full_name: string;
-  };
-  orders: Order;
+  }
 }
 
-interface ReceptionState {
-  patient: { id: string; full_name: string } | null;
-  orders: Order | null;
-  setPatient: (p: { id: string; full_name: string } | null) => void;
-  addOrderItem: (item: OrderItem) => void;
-  updateOrderItem: (item: OrderItem) => void;
-  removeOrderItem: (itemId: number) => void;
-  reset: () => void;
-}
+  interface ReceptionState {
+    patient: Patient | null;
+    orders: Order | null;
+    setPatient: (p: Patient | null) => void;
+    addOrderItem: (item: OrderItem) => void;
+    updateOrderItem: (item: OrderItem) => void;
+    removeOrderItem: (itemId: number) => void;
+    reset: () => void;
+  }
+//   orders: Order | null;
+//   setPatient: (p: { id: string; full_name: string } | null) => void;
+//   addOrderItem: (item: OrderItem) => void;
+//   updateOrderItem: (item: OrderItem) => void;
+//     setPatient: (p) => set({ patient: p }),
+//   reset: () => void;
+// }
 
 
 export const useReceptionStore = create<ReceptionState>((set) => ({

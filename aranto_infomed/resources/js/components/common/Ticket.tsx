@@ -1,52 +1,85 @@
+
 import React from "react"
-import { PatientVisit, Orders } from "@/types/reception"
-import  useSedeData  from "@/hooks/useSedeData"
-
-
-interface TicketProps {
-  data: Orders | null
-
-}
+import useSedeData from "@/hooks/useSedeData"
+import { TicketProps } from "@/types/ticket"
+import {formatPrice} from "@/utils/formatPrice"
 
 
 const Ticket = React.forwardRef<HTMLDivElement, TicketProps>(({ data }, ref) => {
-    const { sede } = useSedeData();
-    console.log('Ticket data in Ticket component:', data);
-    if (!data) return null
-    
+  const { sede } = useSedeData();
+  if (!data) return null;
+
+  const total = data.order.items.reduce((acc, item) => acc + Number(item.total_price), 0);
+
   return (
     <div
       ref={ref}
       style={{
         width: "80mm",
-        fontSize: "12px",
+        fontSize: "11px",
         fontFamily: "monospace",
-        padding: "5px",
+        padding: "8px 4px",
+        background: "#fff",
       }}
     >
-    <h2 style={{ textAlign: "center" }}>{sede?.company_name}</h2>
-    <p><strong>Paciente:</strong> {data?.orders[0]?.patient?.full_name}</p>
-    <p><strong>Seguro:</strong> {data.order.seguro_name}</p>
-    <p><strong>Profesional:</strong> {data.order.professional_name}</p>
-
-      <hr />
-        {data.orders.flatMap(order => order.items).map((item, idx) => (
-        <div key={idx} style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>{idx + 1}</span>
-            <span>{item.professional?.full_name}</span>
-            <span>{item.service_name} ({item.quantity}x)</span>
-            <span>{item.total_price}</span>
-            <span>Profesional: {item?.professional?.full_name}</span>
-        </div>
-        ))}
-      <hr />
-      <p style={{ textAlign: "right" }}>
-        <strong>Total: {data.orders.flatMap(order => order.items).reduce((acc, item) => acc + Number(item.total_price), 0)} </strong>
-      </p>
-      <p style={{ textAlign: "center" }}>¡Gracias por su visita!</p>
+<div style={{ textAlign: "center", marginBottom: 16 }}>
+  <h2 style={{ margin: 0, fontSize: "16px", letterSpacing: 1 }}>{sede?.company_name}</h2>
+  {/* Número de visita y fecha/hora */}
+  {data.visit_id && (
+    <div style={{ fontSize: "11px", marginTop: 2 }}>
+      <strong>Visita N°:</strong> {data.visit_id}
     </div>
-  )
-})
+  )}
+  {data.created_at && (
+    <div style={{ fontSize: "11px" }}>
+      <strong>Fecha:</strong> {new Date(data.created_at).toLocaleDateString()} {new Date(data.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+    </div>
+  )}
+  <div style={{ margin: "12px 0 0 0", fontSize: "12px" }}>
+    <strong>Paciente:</strong> {data.patient.full_name}
+  </div>
+  {data.order.seguro_name && (
+    <div style={{ fontSize: "12px" }}>
+      <strong>Seguro:</strong> {data.order.seguro_name}
+    </div>
+  )}
+  {data.order.professional_name && (
+    <div style={{ fontSize: "12px" }}>
+      <strong>Profesional:</strong> {data.order.professional_name}
+    </div>
+  )}
+</div>
+      <hr style={{ margin: "10px 0" }} />
+      <div style={{ fontWeight: "bold", display: "flex", justifyContent: "space-between", borderBottom: "1px dashed #000", paddingBottom: 3, fontSize: "11px" }}>
+        <span style={{ width: 18 }}>#</span>
+        <span style={{ flex: 2 }}>Servicio</span>
+        <span style={{ flex: 1 }}>Seguro</span>
+      </div>
+      {data.order.items.map((item, idx) => (
+        <div key={idx} style={{ marginBottom: 4 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px" }}>
+            <span style={{ width: 18 }}>{idx + 1}</span>
+            <span style={{ flex: 2 }}>{item.service_name}</span>
+            <span style={{ flex: 1 }}>{item.seguro_name}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", fontSize: "10px", color: "#333", marginLeft: 18 }}>
+            <span style={{ flex: 1 }}><strong>Profesional:</strong> {item.professional?.full_name}</span>
+            <span style={{ width: 40, textAlign: "right" }}><strong>Cant:</strong> {item.quantity}</span>
+            <span style={{ width: 60, textAlign: "right" }}><strong>Subtotal:</strong> {formatPrice(Number(item.total_price))}</span>
+          </div>
+          <hr style={{ margin: "2px 0 2px 0", border: 0, borderTop: "1px dotted #ccc" }} />
+        </div>
+      ))}
+      <hr style={{ margin: "10px 0" }} />
+      <div style={{ textAlign: "right", fontWeight: "bold", fontSize: "13px" }}>
+        Total: {formatPrice(total)}
+      </div>
+      <div style={{ textAlign: "center", marginTop: 12, fontSize: "11px" }}>
+        ¡Gracias por su visita!
+      </div>
+    </div>
+  );
+});
 
 Ticket.displayName = "Ticket"
 export default Ticket

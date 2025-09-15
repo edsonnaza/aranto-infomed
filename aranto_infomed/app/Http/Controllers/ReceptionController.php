@@ -75,20 +75,48 @@ class ReceptionController extends Controller
             'order.items' => 'required|array|min:1',
             'order.items.*.service_id' => 'required|exists:services,id',
             'order.items.*.quantity' => 'required|integer|min:1',
-            'order.items.*.professional_id' => 'required|exists:professionals,id', // obligatorio
+            // Permitir que el profesional venga como objeto, pero validar el id:
+            'order.items.*.professional.id' => 'required|exists:professionals,id',
         ]);
 
         try {
             // 🔹 Intentamos crear visita + orden + items
             $visit = $service->createVisitWithOrder($request->all());
 
+            // Recargar la visita con relaciones para el ticket
+            $visit->load(['patient', 'orders.items', 'orders', 'professional']);
+            $ticketData = [
+                'visit_id' => $visit->id,
+                'created_at' => $visit->created_at,
+                'patient' => [
+                    'full_name' => $visit->patient->full_name ?? '',
+                ],
+                'order' => [
+                    'seguro_name' => optional($visit->seguro)->name ?? 'Particular',
+                    'professional_name' => optional($visit->professional)->full_name ?? '',
+                    'items' => $visit->orders->flatMap(function($order) {
+                        return $order->items->map(function($item) {
+                            return [
+                                'service_name' => $item->service_name,
+                                'seguro_name' => optional($item->seguro)->name ?? 'Particular',
+                                'quantity' => $item->quantity,
+                                'total_price' => $item->total_price,
+                                'professional' => [
+                                    'full_name' => optional($item->professional)->full_name ?? '',
+                                ],
+                            ];
+                        });
+                    })->values()->all(),
+                ],
+            ];
             Log::info('[CONTROLLER][ReceptionController] Visit stored successfully', [
                 'visit_id' => $visit->id
             ]);
-
-            // 🔹 Respuesta exitosa a Inertia
             return redirect()
                 ->route('reception.index')
+                ->with('ticket_data', $ticketData)
+                ->with('visit_id', $visit->id)
+                ->with('created_at', $visit->created_at)
                 ->with('success', "✅ Visita #{$visit->id} registrada correctamente");
 
         } catch (\Throwable $e) {

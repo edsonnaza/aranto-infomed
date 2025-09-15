@@ -77,9 +77,12 @@ export function ProfessionalInput({ professionals, value, onSelect }: Props) {
             </Command>
           </PopoverContent>
           {value && (
-            <p className="text-sm text-green-600">
+            <div className="text-sm text-green-600">
               ✔ Profesional seleccionado: {value.full_name}
-            </p>
+              {typeof value.commission_percentage === 'number' && (
+                <span className="ml-2 text-blue-700">| Comisión: {value.commission_percentage}%</span>
+              )}
+            </div>
           )}
         </Popover>
       </CardContent>

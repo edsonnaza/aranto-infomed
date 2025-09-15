@@ -1,5 +1,8 @@
 // types/reception.ts
 import { z } from "zod"
+import { Professional } from "@/types/professional"
+import { Seguro } from "@/types/seguro"
+import { Patient } from "@/types/patient"
 
 export const VisitOrderItemSchema = z.object({
   service_id: z.number(),
@@ -38,12 +41,12 @@ export type VisitPayload = z.infer<typeof VisitPayloadSchema>
 
 export interface PatientVisit {
   id: number
-  patient: { full_name: string }
-  professional: { full_name: string }
-  seguro: { name: string }
+  patient: Patient
+  professional: Professional
+  seguro: Seguro
   visit_status: string
   created_at: string
-  orders: Orders[]   
+  orders: Order[]   
 } 
 
 export interface VisitsRegisteredProps {
@@ -54,34 +57,19 @@ export interface VisitsRegisteredProps {
     per_page: number
     total: number
     links: { url: string | null; label: string; active: boolean }[]
-    Orders: Orders[]
+    Orders: Order[]
   }
 }
 
-export interface Orders {
-    status: string;
-    visit_status?: string;
-    patient?: { full_name: string };
-   items: Items[];
-}
 
-export interface Items {
-    id: number;
-    professional?: { id: number; full_name: string } | null;
-    service_name: string;
-    status: string;
-    quantity: number;
-    unit_price: string;
-    total_price: string;
-}
-
-interface OrderItem {
+export interface OrderItem {
   id: number;
   service_id: number;
   order_id: number;
   professional: {
-    id: string;
+    id: number;
     full_name: string;
+    commission_percentage?: number;
   };
   service_name: string;
   quantity: number;
@@ -89,9 +77,12 @@ interface OrderItem {
   unit_price: number;
   total_amount: number;
   status: "pending";
+  seguro: Seguro;
+  discount_percent?: number;
+  discount_amount?: number;
 }
 
-interface Order {
+export interface Order {
   id: number;
   status: "pending";
   total_amount_items: number;

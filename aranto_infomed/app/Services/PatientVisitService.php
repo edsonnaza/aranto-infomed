@@ -22,7 +22,9 @@ class PatientVisitService
         }
 
         foreach ($data['order']['items'] as $index => $item) {
-            if (empty($item['professional_id'])) {
+            $prof = $item['professional'] ?? null;
+            $professionalId = $prof['id'] ?? $item['professional_id'] ?? null;
+            if (empty($professionalId)) {
                 throw new \Exception("Cada item debe tener un professional_id. Error en item index $index");
             }
             if (empty($item['service_id'])) {
@@ -60,14 +62,32 @@ class PatientVisitService
 
                 // 3. Crear items de la orden
                 foreach ($data['order']['items'] as $item) {
+                    $prof = $item['professional'] ?? null;
+                    $professionalId = $prof['id'] ?? $item['professional_id'] ?? null;
+                    // Buscar commission_percentage: primero en el objeto, luego en el modelo Profesional
+                    $commissionPercentage = $prof['comision_percentage'] ?? $item['commission_percentage'] ?? null;
+                    if ($commissionPercentage === null && $professionalId) {
+                        $profModel = \App\Models\Profesional::find($professionalId);
+                        if ($profModel) {
+                            // Ojo: el campo en la base es comission_percentage (doble s)
+                            $commissionPercentage = $profModel->comission_percentage ?? 0;
+                        } else {
+                            $commissionPercentage = 0;
+                        }
+                    }
+                    $professionalName = $prof['full_name'] ?? null;
                     $order->items()->create([
                         'service_id' => $item['service_id'],
-                        'professional_id' => $item['professional_id'],
+                        'professional_id' => $professionalId,
                         'service_name' => $item['service_name'],
                         'quantity' => $item['quantity'],
                         'unit_price' => $item['unit_price'],
-                        'discount_amount' => $item['discount_amount'],
+                        'discount_amount' => $item['discount_amount'] ?? 0,
                         'total_price' => $item['total_price'],
+                        'commission_percentage' => $commissionPercentage,
+                        'seguro_id' => $data['seguro_id'] ?? null,
+                        // Si quieres guardar el nombre del profesional para el histórico:
+                        'professional_name' => $professionalName,
                     ]);
                 }
 

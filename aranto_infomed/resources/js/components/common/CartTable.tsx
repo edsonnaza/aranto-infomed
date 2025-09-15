@@ -17,37 +17,15 @@ import {
 import { useSearchServices } from "@/hooks/useSearchServices"
 import { formatPrice } from "@/utils/formatPrice"
 
-// Nuevas interfaces para OrderItem y Order
-interface OrderItem {
-  id: number;
-  service_id: number;
-  order_id: number;
-  professional: {
-    id: string;
-    full_name: string;
-  };
-  service_name: string;
-  quantity: number;
-  total_price: number;
-  unit_price: number;
-  total_amount: number;
-  status: "pending";
-  seguro: {
-    id: number;
-    name: string;
-  };
-  discount_percent?: number;
-  discount_amount?: number;
-}
 
-interface Order {
-  id: number;
-  status: "pending";
-  total_amount_items: number;
-  items: OrderItem[];
-}
+import { Order, OrderItem } from "@/types/reception"
 
 import { Seguro, Professional } from "@/types"
+
+
+
+//type ProfessionalMini = Pick<Professional, "id" | "full_name" | "comision_percentage">;
+
 
 interface CartTableProps {
   order: Order | null;
@@ -92,9 +70,13 @@ export function CartTable({ order, addOrderItem, updateOrderItem, removeOrderIte
                     id: Date.now(),
                     service_id: s.id,
                     order_id: order?.id || 0,
-                    professional: profesional
-                      ? { id: profesional.id.toString(), full_name: profesional.full_name }
-                      : { id: "0", full_name: "Sin profesional" },
+                                professional: profesional
+                                  ? {
+                                      id: profesional.id,
+                                      full_name: profesional.full_name,
+                                      commission_percentage: profesional.commission_percentage,
+                                    }
+                                  : { id: 0, full_name: "Sin profesional", commission_percentage: 0 },
                     service_name: s.name,
                     quantity: 1,
                     total_price: Number(s.price_sale),
