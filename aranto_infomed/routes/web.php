@@ -22,3 +22,4 @@ require __DIR__.'/reception.php';
 require __DIR__.'/patients.php';
 require __DIR__.'/seguros.php';
 require __DIR__.'/sede.php';
+require __DIR__.'/cashregisteropenings.php';
