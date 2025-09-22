@@ -127,36 +127,36 @@ export default function Profesionales({ data: paginatedData, especialidades }: G
           <Button onClick={handleNew}>Nuevo Profesional</Button>
         </div>
 
-      <GenericDataTable
-        columns={columns}
-        data={paginatedData.data}
-        links={paginatedData.links}  
-        serverSidePagination
-        renderActions={(row) => (
-          <div className="flex gap-2">
-            <TooltipComponent message={`Editar ${row.name} ${row.last_name}?`}>
-              <Button variant="ghost" size="icon" onClick={() => handleEdit(row)}>
-                <Pencil className="w-4 h-4" />
-              </Button>
-            </TooltipComponent>
+        <GenericDataTable
+          columns={columns}
+          data={paginatedData.data}
+          links={paginatedData.links}  
+          serverSidePagination
+          renderActions={(row) => (
+            <div className="flex gap-2">
+              <TooltipComponent message={`Editar ${row.name} ${row.last_name}?`}>
+                <Button variant="ghost" size="icon" onClick={() => handleEdit(row)}>
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              </TooltipComponent>
 
-            <TooltipComponent message={row.active ? `Desactivar ${row.name}?` : `Activar ${row.name}?`}>
-              <Button variant="ghost" size="icon" onClick={() => handleToggleActive(row)}>
-                <Trash2 className="w-4 h-4 text-red-500" />
-              </Button>
-            </TooltipComponent>
-          </div>
+              <TooltipComponent message={row.active ? `Desactivar ${row.name}?` : `Activar ${row.name}?`}>
+                <Button variant="ghost" size="icon" onClick={() => handleToggleActive(row)}>
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+              </TooltipComponent>
+            </div>
+          )}
+        />
+        {modalOpen && (
+          <ProfesionalModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            profesional={selected}
+            especialidades={especialidades}
+          />
         )}
-      />
-    {modalOpen && (
-      <ProfesionalModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        profesional={selected}
-        especialidades={especialidades}
-      />
-    )}
-  </div>
+    </div>
     </AppLayout>
   )
 }

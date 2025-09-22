@@ -7,19 +7,24 @@ use Illuminate\Http\Request;
 use App\Models\CashRegisterOpenings;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use App\Models\User;
+use App\Models\Sede;
+
 
 class CashRegisterOpeningsController extends Controller
 {
     // Listar aperturas/cierres
   // CashRegisterOpeningsController.php
+ 
 public function index()
 {
     $openings = CashRegisterOpenings::with(['cashier', 'sede'])
         ->orderByDesc('opened_at')
         ->get();
-
+    $users = User::role('cashier')->get(['id', 'full_name']);
     return Inertia::render('cashregister/CashRegisterPage', [
         'openings' => $openings,
+        'users' => $users,
     ]);
 }
 
@@ -28,17 +33,18 @@ public function index()
     public function store(Request $request)
     {
         $data = $request->validate([
-            'initial_amount' => 'required|numeric|min:0',
-            'notes' => 'nullable|string',
+            'cashier_id' => 'required|exists:users,id',
+            'opening_amount' => 'required|numeric|min:0',
         ]);
+
         $opening = CashRegisterOpenings::create([
-            'user_id' => Auth::id(),
+            'cashier_id' => $data['cashier_id'],
             'opened_at' => now(),
-            'initial_amount' => $data['initial_amount'],
+            'opening_amount' => $data['opening_amount'],
             'status' => 'abierto',
-            'notes' => $data['notes'] ?? null,
+            'sede_id' => Auth::user()->sede_id,
         ]);
-        return response()->json($opening, 201);
+        return redirect()->back()->with('success', '✅ Caja abierta correctamente');
     }
 
     // Cerrar caja

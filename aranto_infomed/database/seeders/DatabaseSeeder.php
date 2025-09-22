@@ -2,10 +2,11 @@
 // database/seeders/DatabaseSeeder.php
 
 namespace Database\Seeders;
-
+use Database\Seeders\CashierRoleSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+
 
 
 class DatabaseSeeder extends Seeder
@@ -42,6 +43,7 @@ class DatabaseSeeder extends Seeder
             LegacyRolesSeeder::class,
             ConceptsSeeder::class,
             CompanySeeder::class,
+            CashierRoleSeeder::class,
             // Add other seeders here as needed
         ]);
     }   
