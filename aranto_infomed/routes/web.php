@@ -23,3 +23,4 @@ require __DIR__.'/patients.php';
 require __DIR__.'/seguros.php';
 require __DIR__.'/sede.php';
 require __DIR__.'/cashregisteropenings.php';
+require __DIR__.'/cashregistercharges.php';

@@ -62,6 +62,10 @@ const mainNavItems: NavItem[] = [
         title: 'Apertura de cajas',
         href: '/cash-register/openings',
       },
+      {
+        title: 'Cobros',
+        href: '/cash-register/charges',
+      },
     ],
   },
 ]
