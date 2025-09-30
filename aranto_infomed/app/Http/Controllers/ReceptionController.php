@@ -233,11 +233,22 @@ class ReceptionController extends Controller
     {
         $today = Carbon::today();
 
-        $visitsRegistered = PatientVisit::with(['patient', 'professional', 'seguro','orders.items', 'orders.items.professional'])
-            ->whereDate('created_at', $today) // 🔥 solo registros de hoy
+        $visitsRegistered = PatientVisit::with(['patient', 'professional', 'seguro','orders.items', 'orders.items.professional', 'payments'])
+            ->whereDate('created_at', $today)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
+        // Mapear para agregar payment_status
+        $mapped = $visitsRegistered->getCollection()->map(function($visit) {
+            return array_merge($visit->toArray(), [
+                'payment_status' => $visit->payment_status,
+            ]);
+        });
+
+        // Reemplazar la colección paginada
+        $visitsRegistered->setCollection(collect($mapped));
+
+        Log::info('Visits registered:', ['data' => $visitsRegistered]);
         return Inertia::render('reception/VisitsRegistered', [
             'professionals' => Profesional::all(),
             'seguros' => Seguro::where('active', true)->get(),

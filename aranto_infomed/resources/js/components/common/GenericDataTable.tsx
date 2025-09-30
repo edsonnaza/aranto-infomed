@@ -179,7 +179,17 @@ export function GenericDataTable<TData>({
               key={idx}
               variant={link.active ? "default" : "outline"}
               size="sm"
-              onClick={() => link.url && router.get(link.url)}
+              onClick={() => {
+                if (!link.url) return;
+                // Extraer los parámetros actuales de la URL y fusionar con los filtros
+                const url = new URL(link.url, window.location.origin);
+                const params = Object.fromEntries(url.searchParams.entries());
+                // Buscar los filtros de fecha en la URL actual
+                const currentParams = Object.fromEntries(new URL(window.location.href).searchParams.entries());
+                if (currentParams.start_date) params.start_date = currentParams.start_date;
+                if (currentParams.end_date) params.end_date = currentParams.end_date;
+                router.get(url.pathname, params, { preserveState: true, replace: true });
+              }}
               disabled={!link.url}
             >
              <span

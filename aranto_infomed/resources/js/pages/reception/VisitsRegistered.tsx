@@ -65,7 +65,7 @@ export default function VisitsRegistered({ data: paginatedData }: VisitsRegister
   }
 
   const columns: ColumnDef<PatientVisit>[] = [
-    { accessorKey: "id", header: "ID" },
+    { accessorFn: (row) => row.id, id: "id", header: "ID" },
     { accessorFn: (row) => row.patient.full_name, id: "patient_name", header: "Paciente" },
     { accessorFn: (row) => row.professional.full_name, id: "professional_name", header: "Profesional" },
     { accessorFn: (row) => row.seguro.name, id: "seguro_name", header: "Seguro" },
@@ -75,6 +75,16 @@ export default function VisitsRegistered({ data: paginatedData }: VisitsRegister
       cell: ({ row }: { row: Row<PatientVisit> }) => (
         <StatusIcon status={row.original.visit_status as OrderStatus} />
       ),
+    },
+    {
+      accessorKey: "payment_status",
+      header: "Cobro",
+      cell: ({ row }: { row: Row<PatientVisit> }) => {
+        const status = row.original.payment_status;
+        if (status === "paid") return <span className="text-green-600 font-semibold">Pagado</span>;
+        if (status === "cancelled") return <span className="text-red-600 font-semibold">Cancelado</span>;
+        return <span className="text-yellow-600 font-semibold">Pendiente</span>;
+      },
     },
     {
       accessorFn: (row) =>
@@ -129,6 +139,7 @@ export default function VisitsRegistered({ data: paginatedData }: VisitsRegister
             onClose={() => setModalOpen(false)}
             title={`# ${selectedVisit.id}: Servicios solicitados de ${selectedVisit.patient.full_name}`}
             orders={selectedVisit.orders}
+            paymentStatus={selectedVisit.payment_status as "paid" | "cancelled" | "pending" }
           />
         )}
 

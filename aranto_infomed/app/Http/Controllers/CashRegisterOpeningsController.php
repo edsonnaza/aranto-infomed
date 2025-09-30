@@ -73,8 +73,9 @@ public function index()
     // Obtener caja actual abierta
     public function current()
     {
-        $opening = CashRegisterOpenings::where('user_id', Auth::id())
-            ->where('status', 'abierto')
+        $opening = CashRegisterOpenings::with('cashier')
+            ->where('cashier_id', Auth::id())
+            ->where('is_open', true)
             ->latest('opened_at')
             ->first();
         return response()->json($opening);

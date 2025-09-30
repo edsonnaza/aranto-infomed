@@ -24,6 +24,22 @@ class PatientVisit extends Model
         'sede_id',
         'created_by',
     ];
+        public function payments()
+        {
+            return $this->hasMany(\App\Models\PatientVisitPayments::class, 'patient_visit_id');
+        }
+
+        // Estado de cobro dinámico
+        public function getPaymentStatusAttribute()
+        {
+            if ($this->payments()->where('payment_status', 'paid')->exists()) {
+                return 'paid';
+            }
+            if ($this->payments()->where('payment_status', 'cancelled')->exists()) {
+                return 'cancelled';
+            }
+            return 'pending';
+        }
 
     public function orders(): HasMany
     {

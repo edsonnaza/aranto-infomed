@@ -45,6 +45,7 @@ export interface PatientVisit {
   professional: Professional
   seguro: Seguro
   visit_status: string
+  payment_status: string
   created_at: string
   orders: Order[]   
 } 

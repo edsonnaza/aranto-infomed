@@ -2,7 +2,7 @@ export interface CashRegisterOpening {
   id: number;
   cashier: {
     id: number;
-    name: string;
+    full_name: string;
   };
   sede: {
     id: number;

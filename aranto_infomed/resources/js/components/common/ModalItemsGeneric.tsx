@@ -5,8 +5,8 @@ import * as React from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { GenericDataTable } from "./GenericDataTable"
-import { StatusIcon, OrderStatus } from "@/components/common/StatusIcons"
-import { Orders, Items } from "@/types/reception"
+import { StatusIcon } from "@/components/common/StatusIcons"
+import { Order, OrderItem } from "@/types/reception"
 import { ColumnDef, Row } from "@tanstack/react-table"
 import { formatPrice } from "@/utils/formatPrice"
 
@@ -14,21 +14,14 @@ interface ModalItemsGenericProps<T> {
   open: boolean
   onClose: () => void
   title?: string
-  items?: Items[] // si ya tenés un array de items plano
-  orders?: Orders[] // si tenés orders con items dentro
+  items?: OrderItem[] // si ya tenés un array de items plano
+  orders?: Order[] // si tenés orders con items dentro
   columns?: ColumnDef<T>[] // columnas opcionales, si no se genera por defecto
   footer?: React.ReactNode
+  paymentStatus?: "paid" | "cancelled" | "pending"
 }
 
-interface OrderItem {
-  id: number
-  professional: { id: number; full_name: string } 
-  service_name: string
-  quantity: number
-  unit_price: string
-  total_price: string
-  orderStatus: OrderStatus
-}
+
 
 
 export function ModalItemsGeneric<T>({
@@ -38,64 +31,69 @@ export function ModalItemsGeneric<T>({
   items,
   orders,
   footer,
+  paymentStatus,
 }: ModalItemsGenericProps<T>) {
 
   // 🔹 Extrae items de orders si se pasó orders
- const processedItems: OrderItem[] = React.useMemo(() => {
-  if (items) {
-    // ...
-  }
-  if (orders) {
-    return orders.flatMap(order =>
-      order.items.map((item: Items) => ({
-        ...item,
-        orderStatus: order.status,
-        professional: item.professional ?? { id: 0, full_name: '' }, // Agregar esta línea
-      }))
-    ) as OrderItem[]
-  }
-  return []
-}, [items, orders])
+  type OrderItemWithStatus = OrderItem & { orderStatus?: string };
 
-// 🔹 Columnas por defecto si no se pasan
-const defaultColumns: ColumnDef<OrderItem>[] = React.useMemo(() => [
-  { accessorKey: "service_name", header: "Servicio" },
-  {
-    accessorKey: "professional.full_name",
-    header: "Profesional",
-    cell: ({ row }: { row: Row<OrderItem> }) =>
-      row.original.professional?.full_name ?? "—",
-  },
-  {
-    accessorKey: "orderStatus",
-    header: "Estado",
-    cell: ({ row }: { row: Row<OrderItem> }) => (
-      <StatusIcon status={row.original.orderStatus} />
-    ),
-  },
-  { accessorKey: "quantity", header: ()=><div className="text-center">Cantidad</div>,
-    cell: ({ getValue }) => {
-      const value = getValue<number>()
-      return <div className="text-center">{formatPrice(Number(value))}</div>
+  const processedItems: OrderItemWithStatus[] = React.useMemo(() => {
+    if (items) {
+      return items.map(item => ({
+        ...item,
+        professional: item.professional ?? { id: 0, full_name: '' },
+      }));
     }
-  },
-  {
-    accessorKey: "total_price",
-    header: () => <div className="text-right">Total c/ Desc.</div>,
-    cell: ({ getValue }) => {
-      const value = getValue<string>()
-      return <div className="text-right">{"Gs " + formatPrice(Number(value))}</div>
+    if (orders) {
+      return orders.flatMap(order =>
+        order.items.map((item: OrderItem) => ({
+          ...item,
+          orderStatus: order.status,
+          professional: item.professional ?? { id: 0, full_name: '' },
+        }))
+      );
+    }
+    return [];
+  }, [items, orders]);
+
+  const defaultColumns: ColumnDef<OrderItemWithStatus>[] = React.useMemo(() => [
+    { accessorKey: "service_name", header: "Servicio" },
+    {
+      accessorKey: "professional.full_name",
+      header: "Profesional",
+      cell: ({ row }: { row: Row<OrderItemWithStatus> }) =>
+        row.original.professional?.full_name ?? "—",
     },
-  },
-  {
-    accessorKey: "unit_price",
-    header: () => <div className="text-right">Precio unitario</div>,
-    cell: ({ getValue }) => {
-      const value = getValue<string>()
-      return <div className="text-right">{"Gs " + formatPrice(Number(value))}</div>
+    {
+      accessorKey: "orderStatus",
+      header: "Estado",
+      cell: ({ row }: { row: Row<OrderItemWithStatus> }) => (
+        <StatusIcon status={row.original.orderStatus ?? "pending"} />
+      ),
     },
-  },
-], [])
+    { accessorKey: "quantity", header: ()=><div className="text-center">Cantidad</div>,
+      cell: ({ getValue }) => {
+        const value = getValue<number>()
+        return <div className="text-center">{formatPrice(Number(value))}</div>
+      }
+    },
+    {
+      accessorKey: "total_price",
+      header: () => <div className="text-right">Total c/ Desc.</div>,
+      cell: ({ getValue }) => {
+        const value = getValue<string>()
+        return <div className="text-right">{"Gs " + formatPrice(Number(value))}</div>
+      },
+    },
+    {
+      accessorKey: "unit_price",
+      header: () => <div className="text-right">Precio unitario</div>,
+      cell: ({ getValue }) => {
+        const value = getValue<string>()
+        return <div className="text-right">{"Gs " + formatPrice(Number(value))}</div>
+      },
+    },
+  ], [])
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -103,6 +101,22 @@ const defaultColumns: ColumnDef<OrderItem>[] = React.useMemo(() => [
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
+
+        {/* Estado de cobro */}
+        {typeof paymentStatus !== "undefined" && (
+          <div className="mb-2">
+            <span className="font-semibold">Estado de cobro: </span>
+            {paymentStatus === "paid" && (
+              <span className="text-green-600 font-semibold">Pagado</span>
+            )}
+            {paymentStatus === "cancelled" && (
+              <span className="text-red-600 font-semibold">Cancelado</span>
+            )}
+            {paymentStatus === "pending" && (
+              <span className="text-yellow-600 font-semibold">Pendiente</span>
+            )}
+          </div>
+        )}
 
         {processedItems.length ? (
           <div className="overflow-x-auto">
@@ -123,3 +137,5 @@ const defaultColumns: ColumnDef<OrderItem>[] = React.useMemo(() => [
     </Dialog>
   )
 }
+
+

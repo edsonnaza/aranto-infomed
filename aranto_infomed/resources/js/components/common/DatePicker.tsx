@@ -10,7 +10,12 @@ export function DatePicker({ value, onChange }: { value: string; onChange: (date
       <PopoverTrigger asChild>
         <Button variant="outline" className="w-[180px] justify-start text-left font-normal">
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {value ? value : "Seleccionar fecha"}
+          {value
+            ? (() => {
+                const [y, m, d] = value.split('-');
+                return `${d}-${m}-${y}`;
+              })()
+            : "Seleccionar fecha"}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
